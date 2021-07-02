@@ -1,6 +1,5 @@
 package org.reactiveminds.actiongraph.core;
 
-import akka.actor.ActorRef;
 import org.reactiveminds.actiongraph.ActionGraphException;
 import org.reactiveminds.actiongraph.Node;
 
@@ -195,7 +194,7 @@ public class Group extends AbstractNode{
 
     @Override
     public void react(Predicate<Node> filter, Serializable signal) {
-        actorWrapper.actorRef.tell(NodeActor.newBranchEvent(signal, filter), ActorRef.noSender());
+        actorWrapper.tell(NodeActor.BranchEvent(signal, filter), null);
     }
 
 }

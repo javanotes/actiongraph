@@ -46,6 +46,34 @@ public class Usage {
         app.makeGroup("work4", true).makeGroup("work5", true);
         app.print();
     }
+    static void tester() throws InterruptedException {
+        // create root group
+        Group ordersTrigger = ActionGraphs.instance().root("orders");
+        // create action handler - the "reaction"
+        Reaction myReaction = new Reaction(){
+            @Override
+            public void destroy() {
+
+            }
+
+            @Override
+            public void accept(Action action, Serializable serializable) {
+                // I am at action.path()
+                // I have the signal serializable
+            }
+        };
+
+        // create sub groups
+        Group servicingTrigger = ordersTrigger.changeGroup("Servicing", true);
+        // attach handlers to the actions
+        servicingTrigger.getAction("Internal", true).addObserver(myReaction);
+        servicingTrigger.getAction("External", true).addObserver(myReaction);
+        ordersTrigger.getAction("Transaction", true).addObserver(myReaction);
+        ordersTrigger.getAction("Sales", true).addObserver(myReaction);
+
+        // pass event, with node filter - or simply, match all
+        ordersTrigger.react(Predicates.MATCH_ALL, "some_event_signal");
+    }
     static void reaction() throws InterruptedException {
         Group audit = ActionGraphs.instance().createGroup("/opt/app/work/classes");
         MyReaction myReaction = new MyReaction();
@@ -75,6 +103,11 @@ public class Usage {
             LOG.info(String.format("[%s] reaction executed for %s-%s : %s",
                     Thread.currentThread().getName(), context.parent().name(), context.name(), serializable));
         }
+
+        @Override
+        public void destroy() {
+
+        }
     }
     public static class MyReaction2 implements Reaction{
         private static final Logger LOG = Logger.getLogger(MyReaction2.class.getName());
@@ -82,6 +115,11 @@ public class Usage {
         public void accept(Action context, Serializable serializable) {
             LOG.info(String.format("[%s] some other reaction for %s-%s : %s",
                     Thread.currentThread().getName(), context.parent().name(), context.name(), serializable));
+        }
+
+        @Override
+        public void destroy() {
+
         }
     }
 }

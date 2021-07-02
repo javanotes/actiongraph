@@ -1,7 +1,5 @@
 package org.reactiveminds.actiongraph.core;
 
-import akka.actor.ActorRef;
-import akka.pattern.AskableActorRef;
 import org.reactiveminds.actiongraph.Node;
 
 import java.time.Duration;
@@ -60,10 +58,8 @@ abstract class AbstractNode implements Node {
         created = System.currentTimeMillis();
         modified = created;
         actorWrapper = Actors.instance().actorOf(path(), this);
-        askableActorRef = new AskableActorRef(actorWrapper.actorRef);
     }
-    protected final Actors.ActorWrapper actorWrapper;
-    private final AskableActorRef askableActorRef;
+    protected final ActorReference actorWrapper;
     @Override
     public Group parent() {
         return parent;
@@ -94,7 +90,7 @@ abstract class AbstractNode implements Node {
         }
     }
     final void stopActor(){
-        actorWrapper.actorRef.tell(new NodeActor.StopEvent(), ActorRef.noSender());
+        actorWrapper.tell(new NodeActor.StopEvent(), null);
         try {
             actorWrapper.awaitTermination(Duration.ofSeconds(30));
         } catch (InterruptedException e) {

@@ -22,10 +22,10 @@ class NodeActor extends AbstractActor {
     public static Props create(AbstractNode node, AtomicBoolean running) {
         return Props.create(NodeActor.class, node, running);
     }
-    public static Event newBranchEvent(Serializable payload, Predicate<Node> predicate){
+    public static Event BranchEvent(Serializable payload, Predicate<Node> predicate){
         return new BranchEvent(payload, predicate);
     }
-    public static Event newLeafEvent(Serializable payload, Predicate<Node> predicate){
+    public static Event LeafEvent(Serializable payload, Predicate<Node> predicate){
         return new LeafEvent(payload, predicate);
     }
     public static abstract class Event{
@@ -63,11 +63,11 @@ class NodeActor extends AbstractActor {
                     .forEach(e -> {
                         if(e.getValue().type() == Node.Type.GROUP) {
                             AbstractNode branch = (AbstractNode) e.getValue();
-                            branch.actorWrapper.actorRef.tell(NodeActor.newBranchEvent(event.payload, event.predicate), branchNode.actorWrapper.actorRef);
+                            branch.actorWrapper.tell(NodeActor.BranchEvent(event.payload, event.predicate), branchNode.actorWrapper);
                         }
                         else {
                             AbstractNode leaf = (AbstractNode) e.getValue();
-                            leaf.actorWrapper.actorRef.tell(NodeActor.newLeafEvent(event.payload, event.predicate), branchNode.actorWrapper.actorRef);
+                            leaf.actorWrapper.tell(NodeActor.LeafEvent(event.payload, event.predicate), branchNode.actorWrapper);
                         }
                     });
         }finally {

@@ -9,23 +9,15 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Observable;
+import java.util.*;
+import java.util.concurrent.SubmissionPublisher;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Predicate;
 
 public class Action extends AbstractNode{
 
     protected String content;
-    private final Observable observable = new Observable(){
-        @Override
-        public void notifyObservers(Object arg){
-            setChanged();
-            super.notifyObservers(arg);
-        }
-    };
+    private final List<Reaction> subscribers = new LinkedList<>();
     Action(Group parent, String name, ReadWriteLock readWriteLock) {
         super(parent, name, readWriteLock);
         try {
@@ -41,8 +33,8 @@ public class Action extends AbstractNode{
      * @param <T>
      * @return
      */
-    public <T extends Reaction> Action addObserver(final T instance){
-        observable.addObserver((o, arg) -> instance.accept(this, (Serializable) arg));
+    public synchronized <T extends Reaction> Action  addObserver(final T instance){
+        subscribers.add(instance);
         return this;
     }
     public String read(){
@@ -105,7 +97,8 @@ public class Action extends AbstractNode{
         try {
             if(isDeleted)
                 throw new ActionGraphException("File is deleted!");
-            observable.deleteObservers();
+            subscribers.forEach(reaction -> reaction.destroy());
+            subscribers.clear();
             return super.delete();
         }finally {
             readWriteLock.writeLock().unlock();
@@ -119,7 +112,9 @@ public class Action extends AbstractNode{
 
     @Override
     public void react(Predicate<Node> filter, Serializable signal) {
-        if(filter.test(this))
-            observable.notifyObservers(signal);
+        if(filter.test(this)){
+            // this is invoked in actor - thread safe
+            subscribers.forEach(reaction -> reaction.accept(this, signal));
+        }
     }
 }
