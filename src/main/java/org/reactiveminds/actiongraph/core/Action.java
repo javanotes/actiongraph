@@ -3,14 +3,12 @@ package org.reactiveminds.actiongraph.core;
 import org.reactiveminds.actiongraph.ActionGraphException;
 import org.reactiveminds.actiongraph.Node;
 import org.reactiveminds.actiongraph.react.Reaction;
-import org.reactiveminds.actiongraph.react.ReactiveOperationException;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.concurrent.SubmissionPublisher;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Predicate;
 
@@ -23,7 +21,7 @@ public class Action extends AbstractNode{
         try {
             digest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
-            throw new ReactiveOperationException("internal error!", e);
+            throw new ActionGraphException("internal error!", e);
         }
     }
 
