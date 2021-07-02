@@ -111,7 +111,7 @@ class NodeActor extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(BranchEvent.class, event -> recurse(event))
-                .match(LeafEvent.class, event -> node.react(event.predicate, event.payload))
+                .match(LeafEvent.class, event -> ((Action)node).react(event.predicate, event.payload))
                 .match(StopEvent.class, event -> stop())
                 .build();
     }

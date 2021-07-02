@@ -53,13 +53,13 @@ public class Usage {
         Reaction myReaction = new Reaction(){
             @Override
             public void destroy() {
-
+                // when the action is deleted
             }
 
             @Override
-            public void accept(Action action, Serializable serializable) {
-                // I am at action.path()
-                // I have the signal serializable
+            public void accept(String actionPath, Serializable event) {
+                // I am at actionPath
+                // I have the event
             }
         };
 
@@ -71,8 +71,10 @@ public class Usage {
         ordersTrigger.getAction("Transaction", true).addObserver(myReaction);
         ordersTrigger.getAction("Sales", true).addObserver(myReaction);
 
-        // pass event, with node filter - or simply, match all
+        // pass event from root, with node filter - or simply, match all
         ordersTrigger.react(Predicates.MATCH_ALL, "some_event_signal");
+        // or from a sub-tree
+        servicingTrigger.react(Predicates.MATCH_ALL, "some_subevent_signal");
     }
     static void reaction() throws InterruptedException {
         Group audit = ActionGraphs.instance().createGroup("/opt/app/work/classes");
@@ -99,9 +101,9 @@ public class Usage {
     public static class MyReaction implements Reaction {
         private static final Logger LOG = Logger.getLogger(MyReaction.class.getName());
         @Override
-        public void accept(Action context, Serializable serializable) {
-            LOG.info(String.format("[%s] reaction executed for %s-%s : %s",
-                    Thread.currentThread().getName(), context.parent().name(), context.name(), serializable));
+        public void accept(String context, Serializable serializable) {
+            LOG.info(String.format("[%s] reaction executed at %s : %s",
+                    Thread.currentThread().getName(), context, serializable));
         }
 
         @Override
@@ -112,9 +114,9 @@ public class Usage {
     public static class MyReaction2 implements Reaction{
         private static final Logger LOG = Logger.getLogger(MyReaction2.class.getName());
         @Override
-        public void accept(Action context, Serializable serializable) {
-            LOG.info(String.format("[%s] some other reaction for %s-%s : %s",
-                    Thread.currentThread().getName(), context.parent().name(), context.name(), serializable));
+        public void accept(String context, Serializable serializable) {
+            LOG.info(String.format("[%s] some other reaction at %s : %s",
+                    Thread.currentThread().getName(), context, serializable));
         }
 
         @Override

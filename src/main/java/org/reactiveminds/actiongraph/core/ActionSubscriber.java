@@ -24,7 +24,7 @@ class ActionSubscriber implements Flow.Subscriber<Serializable> {
 
     @Override
     public void onNext(Serializable item) {
-        reaction.accept(action, item);
+        reaction.accept(action.path(), item);
         subscription.request(1);
     }
 

@@ -8,6 +8,6 @@ import java.util.function.BiConsumer;
 /**
  * Every action should have a reaction (and repercussions, maybe)
  */
-public interface Reaction extends BiConsumer<Action, Serializable> {
+public interface Reaction extends BiConsumer<String, Serializable> {
     void destroy();
 }

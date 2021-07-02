@@ -192,8 +192,8 @@ public class Group extends AbstractNode{
         return Type.GROUP;
     }
 
-    @Override
-    public void react(Predicate<Node> filter, Serializable signal) {
+
+    public final void react(Predicate<Node> filter, Serializable signal) {
         actorWrapper.tell(NodeActor.BranchEvent(signal, filter), null);
     }
 

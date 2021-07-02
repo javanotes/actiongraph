@@ -108,11 +108,10 @@ public class Action extends AbstractNode{
         return Type.ACTION;
     }
 
-    @Override
-    public void react(Predicate<Node> filter, Serializable signal) {
+    final void react(Predicate<Node> filter, Serializable signal) {
         if(filter.test(this)){
             // this is invoked in actor - thread safe
-            subscribers.forEach(reaction -> reaction.accept(this, signal));
+            subscribers.forEach(reaction -> reaction.accept(path(), signal));
         }
     }
 }
