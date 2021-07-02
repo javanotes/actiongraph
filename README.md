@@ -36,26 +36,30 @@ We should be able to create a decision tree with an _order completion state_ as 
 
 // create root group
 Group ordersTrigger = ActionGraphs.instance().root("orders");
-
 // create action handler - the "reaction"
 Reaction myReaction = new Reaction(){
     @Override
-    public void accept(Action action, Serializable serializable) {
-        // I am at action.path()
-        // I have the signal serializable
-        // messages per action will be in order
+    public void destroy() {
+        // when the action is deleted
+    }
+
+    @Override
+    public void accept(String actionPath, Serializable event) {
+        // I am at actionPath
+        // I have the event
     }
 };
 
 // create sub groups
 Group servicingTrigger = ordersTrigger.changeGroup("Servicing", true);
-
 // attach handlers to the actions
 servicingTrigger.getAction("Internal", true).addObserver(myReaction);
 servicingTrigger.getAction("External", true).addObserver(myReaction);
 ordersTrigger.getAction("Transaction", true).addObserver(myReaction);
 ordersTrigger.getAction("Sales", true).addObserver(myReaction);
 
-// pass event, with node filter - or simply, match all
+// pass event from root, with node filter - or simply, match all
 ordersTrigger.react(Predicates.MATCH_ALL, "some_event_signal");
+// or from a sub-tree
+servicingTrigger.react(Predicates.MATCH_ALL, "some_subevent_signal");
 ```
