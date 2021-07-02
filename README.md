@@ -43,7 +43,7 @@ Reaction myReaction = new Reaction(){
     public void accept(Action action, Serializable serializable) {
         // I am at action.path()
         // I have the signal serializable
-        // oh, and I am running thread safe
+        // messages per action will be in order
     }
 };
 
