@@ -47,6 +47,7 @@ Reaction myReaction = new Reaction(){
     public void accept(String actionPath, Serializable event) {
         // I am at actionPath
         // I have the event
+        // thread safe per action
     }
 };
 
