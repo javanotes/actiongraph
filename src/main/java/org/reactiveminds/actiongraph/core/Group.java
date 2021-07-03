@@ -3,7 +3,9 @@ package org.reactiveminds.actiongraph.core;
 import org.reactiveminds.actiongraph.ActionGraphException;
 import org.reactiveminds.actiongraph.Node;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,49 +42,50 @@ public class Group extends AbstractNode{
         }
     }
 
-    private void print(int level){
+    private void print(PrintWriter writer, int level){
         StringBuilder gap = new StringBuilder();
         for (int i = 0; i < level; i++) {
             gap.append("\t");
         }
         if(level == 0)
-            System.out.println(" -" + " " + path());
+            writer.println(" -" + " " + path());
         else
-            System.out.println(gap.toString()+" - "+type() + " " + name());
+            writer.println(gap.toString()+" - "+type() + " " + name());
         gap.append("\t");
         children.entrySet().stream()
                 .sorted(Comparator.comparingLong(o -> o.getKey().getTime()))
                 .map(Map.Entry::getValue).forEach(node -> {
                     if(node.type() == Type.GROUP) {
-                        ((Group) node).print(level + 1);
+                        ((Group) node).print(writer, level + 1);
                     }
                     else {
-                        System.out.println(gap.toString() + " - " + node.type() + " " + node.name());
+                        writer.println(gap.toString() + " - " + node.type() + " " + node.name());
                     }
                 });
     }
     /**
      *
      */
-    public void print(){
+    public void print(PrintWriter writer){
         readWriteLock.readLock().lock();
         try {
             if(isDeleted)
                 throw new ActionGraphException("Dir is deleted!");
-            print(0);
+            print(writer, 0);
+            writer.flush();
         }
         finally {
             readWriteLock.readLock().unlock();
         }
 
     }
-    private void createChild(String child, Type type, boolean append){
+    private void createChild(String child, Type type){
         readWriteLock.writeLock().lock();
         try{
             if(isDeleted)
                 throw new ActionGraphException("Dir is deleted!");
             children.put(new TimedString(child), type == Type.GROUP ? new Group(this, child, readWriteLock)
-                    : append ? new AppendFileNode(this, child, readWriteLock) : new Action(this, child, readWriteLock));
+                     : new Action(this, child, readWriteLock));
         }finally {
             readWriteLock.writeLock().unlock();
         }
@@ -101,10 +104,6 @@ public class Group extends AbstractNode{
         }
         return null;
     }
-    private static void checkName(String child){
-        if(child == null || child.trim().isEmpty() || child.contains("/"))
-            throw new IllegalArgumentException("Invalid child name '"+child+"'");
-    }
 
     /**
      * Create or get directory
@@ -113,10 +112,9 @@ public class Group extends AbstractNode{
      * @return the created dir
      */
     public Group changeGroup(String child, boolean create){
-        checkName(child);
         Node dir = getChild(child);
         if(dir == null && create){
-            createChild(child, Type.GROUP, false);
+            createChild(child, Type.GROUP);
         }
         dir = getChild(child);
         if(dir == null)
@@ -131,10 +129,9 @@ public class Group extends AbstractNode{
      * @return the current dir
      */
     public Group makeGroup(String child, boolean create){
-        checkName(child);
         Node dir = getChild(child);
         if(dir == null && create){
-            createChild(child, Type.GROUP, false);
+            createChild(child, Type.GROUP);
         }
         dir = getChild(child);
         if(dir == null)
@@ -149,21 +146,9 @@ public class Group extends AbstractNode{
      * @return
      */
     public Action getAction(String name, boolean create){
-        return getAction(name, create, false);
-    }
-
-    /**
-     * Create or get file in append mode
-     * @param name
-     * @param create
-     * @param append
-     * @return
-     */
-    public Action getAction(String name, boolean create, boolean append){
-        checkName(name);
         Node file = getChild(name);
         if(file == null && create){
-            createChild(name, Type.ACTION, append);
+            createChild(name, Type.ACTION);
         }
         file = getChild(name);
         if(file == null)
@@ -178,7 +163,7 @@ public class Group extends AbstractNode{
             if(isDeleted)
                 throw new ActionGraphException("Dir is deleted!");
             // unlinking while iterating - thus requiring a concurrent map
-            children.values().forEach(node -> node.delete());
+            children.values().forEach(Node::delete);
             children.clear();
             return super.delete();
         }
@@ -191,7 +176,6 @@ public class Group extends AbstractNode{
     public Type type() {
         return Type.GROUP;
     }
-
 
     public final void react(Predicate<Node> filter, Serializable signal) {
         actorWrapper.tell(NodeActor.BranchEvent(signal, filter), null);

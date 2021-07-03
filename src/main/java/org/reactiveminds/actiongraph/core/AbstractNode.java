@@ -1,17 +1,20 @@
 package org.reactiveminds.actiongraph.core;
 
+import org.reactiveminds.actiongraph.ActionGraphException;
 import org.reactiveminds.actiongraph.Node;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 abstract class AbstractNode implements Node {
     private static final Logger LOG = Logger.getLogger(AbstractNode.class.getName());
     protected final ReadWriteLock readWriteLock;
-    boolean isDeleted = false;
+    volatile boolean isDeleted = false;
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -32,7 +35,7 @@ abstract class AbstractNode implements Node {
         stopActor();
         unlink();
         isDeleted = true;
-        LOG.info(String.format("deleted %s node '%s'",type(), name()));
+        LOG.fine(String.format("deleted %s node '%s'",type(), name()));
         return isDeleted;
     }
     @Override
@@ -49,8 +52,12 @@ abstract class AbstractNode implements Node {
     public int hashCode() {
         return Objects.hash(type(), id);
     }
-
+    static void checkName(String name){
+        if(name == null || name.trim().isEmpty() || name.contains("/") || name.contains("."))
+            throw new ActionGraphException("node name not allowed '"+name+"'");
+    }
     AbstractNode(Group parent, String name, ReadWriteLock readWriteLock) {
+        checkName(name);
         this.parent = parent;
         this.name = name;
         this.readWriteLock = readWriteLock;
@@ -97,4 +104,5 @@ abstract class AbstractNode implements Node {
             Thread.currentThread().interrupt();
         }
     }
+    abstract void react(Predicate<Node> filter, Serializable signal);
 }

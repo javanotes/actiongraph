@@ -14,6 +14,12 @@ class NodeActor extends AbstractActor {
     private static final Logger LOG = Logger.getLogger(NodeActor.class.getName());
     private final AbstractNode node;
     private final AtomicBoolean running;
+
+    /**
+     *
+     * @param node
+     * @param running
+     */
     NodeActor(AbstractNode node, AtomicBoolean running) {
         this.node = node;
         this.running = running;
@@ -59,7 +65,15 @@ class NodeActor extends AbstractActor {
         branchNode.readWriteLock.readLock().lock();
         try{
             branchNode.children.entrySet().stream()
-                    .filter(e -> event.predicate.test(e.getValue()))
+                    // don't filter at group level. we cannot short circuit, else matching paths will never be reached.
+                    // filters are fired at action levels. hence the only filter kept is PathMatcher.
+                    // the full tree will be traversed always, else a sophisticated (depth first) tree traversal algorithm based on path pattern (?)
+                    /*
+                    .filter(e -> {
+                        LOG.fine(String.format("testing predicate %s against node %s",event.predicate, e.getValue().path()));
+                        return event.predicate.test(e.getValue());
+                    })
+                    */
                     .forEach(e -> {
                         if(e.getValue().type() == Node.Type.GROUP) {
                             AbstractNode branch = (AbstractNode) e.getValue();
@@ -70,12 +84,16 @@ class NodeActor extends AbstractActor {
                             leaf.actorWrapper.tell(NodeActor.LeafEvent(event.payload, event.predicate), branchNode.actorWrapper);
                         }
                     });
-        }finally {
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
             branchNode.readWriteLock.readLock().unlock();
         }
     }
     private void stop(){
-        LOG.warning("Stopping actor on: "+node.path());
+        LOG.fine("Stopping actor on: "+node.path());
         if(node.type() == Node.Type.GROUP){
             Group branchNode = (Group) node;
             branchNode.readWriteLock.readLock().lock();
@@ -111,7 +129,11 @@ class NodeActor extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(BranchEvent.class, event -> recurse(event))
-                .match(LeafEvent.class, event -> ((Action)node).react(event.predicate, event.payload))
+                .match(LeafEvent.class, event -> {
+                    if(event.predicate.test(node)) {
+                        node.react(event.predicate, event.payload);
+                    }
+                })
                 .match(StopEvent.class, event -> stop())
                 .build();
     }

@@ -11,10 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * An action graph topology to support hierarchical concurrent event processing.
+ * An action graph topology to support hierarchical observers
  */
 public final class ActionGraphs {
     static class SysoutConsoleHandler extends ConsoleHandler{
@@ -23,10 +25,21 @@ public final class ActionGraphs {
             super.setOutputStream(System.out);
         }
     }
+    static void setLevel() {
+        String logLevel = System.getenv().getOrDefault("logLevel", Level.INFO.getName());
+        Level targetLevel = Level.parse(logLevel);
+        Logger root = Logger.getLogger("");
+        root.setLevel(targetLevel);
+        for (Handler handler : root.getHandlers()) {
+            handler.setLevel(targetLevel);
+        }
+        System.out.println("level set: " + targetLevel.getName());
+    }
     static {
         System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] [%4$-7s] %5$s %n");
         System.setProperty("handlers", "org.reactiveminds.memfs.ActionGroups.SysoutConsoleHandler");
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).setUseParentHandlers(false);
+        setLevel();
     }
     private static final Logger LOG = Logger.getLogger(ActionGraphs.class.getName());
     private ActionGraphs(){}
@@ -44,19 +57,20 @@ public final class ActionGraphs {
     public synchronized void release()  {
         if(isShutdown)
             return;
-        LOG.info("stopping actor subsystem ..");
-        Actors.instance().shutdown();
         shutdownThread = new Thread(() -> mounts.values().forEach(root -> {
-            LOG.info(String.format("release: Unlinking root %s", root.path()));
+            LOG.info(String.format("releasing root %s ..", root.path()));
             root.delete();
-            LOG.info(String.format("release: Deleted root %s", root.path()));
+            LOG.warning(String.format("** released root %s **", root.path()));
         }));
+        shutdownThread.start();
         try {
             shutdownThread.join(Duration.ofSeconds(30).toMillis());
         } catch (InterruptedException e) {
             shutdownThread.interrupt();
         }
         mounts.clear();
+        LOG.info("stopping actor subsystem ..");
+        Actors.instance().shutdown();
         isShutdown = true;
     }
     public static ActionGraphs instance(){
@@ -64,12 +78,12 @@ public final class ActionGraphs {
     }
     public synchronized Group root(String name){
         if(isShutdown)
-            throw new IllegalStateException("System has been released!");
+            throw new ActionGraphException("System has been released!");
         return getRoot(name);
     }
 
     /**
-     * Create branch path, if not exists
+     * Create or get group node at the given path
      * @param path dir path
      * @return dir
      */
@@ -93,7 +107,7 @@ public final class ActionGraphs {
     }
     private Group getPredecessor(String path, boolean fullPath){
         if(path == null || path.trim().isEmpty() || !path.startsWith("/"))
-            throw new ActionGraphException("Invalid path: "+path);
+            throw new ActionGraphException("Invalid path (should start with \"/\"): "+path);
         String sanitized = path.trim();
         char[] chars = sanitized.toCharArray();
         while(chars[0] == '/'){
@@ -120,7 +134,7 @@ public final class ActionGraphs {
         @Override
         public boolean delete() {
             if(Thread.currentThread() != shutdownThread)
-                throw new IllegalStateException("Removing root node is not allowed");
+                throw new ActionGraphException("Removing root node is not allowed! This operation can only done on release()");
             return super.delete();
         }
     }
