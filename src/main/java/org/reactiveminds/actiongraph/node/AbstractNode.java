@@ -1,9 +1,8 @@
-package org.reactiveminds.actiongraph.core;
+package org.reactiveminds.actiongraph.node;
 
 import org.reactiveminds.actiongraph.ActionGraphException;
 import org.reactiveminds.actiongraph.Node;
 
-import java.io.Serializable;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
@@ -104,5 +103,5 @@ abstract class AbstractNode implements Node {
             Thread.currentThread().interrupt();
         }
     }
-    abstract void react(Predicate<Node> filter, Serializable signal);
+    abstract void react(Predicate<Node> filter, String signal);
 }

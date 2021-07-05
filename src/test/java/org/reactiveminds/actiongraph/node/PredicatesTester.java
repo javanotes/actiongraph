@@ -1,10 +1,9 @@
-package org.reactiveminds.actiongraph.core;
+package org.reactiveminds.actiongraph.node;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
-import org.reactiveminds.actiongraph.ActionGraphException;
-import org.reactiveminds.actiongraph.ActionGraphs;
+import org.reactiveminds.actiongraph.ActionGraph;
 import org.reactiveminds.actiongraph.react.Predicates;
 import org.reactiveminds.actiongraph.react.Reaction;
 
@@ -19,18 +18,18 @@ public class PredicatesTester {
         }
 
         @Override
-        public void accept(String s, Serializable serializable) {
+        public void accept(String s, String serializable) {
             System.out.println(String.format("regex '%s' match at path: %s", serializable, s));
         }
     };
 
     //@Test(expected = ActionGraphException.class)
     public void testNameNotAllowedWithSlash(){
-        ActionGraphs.instance().root("/op");
+        ActionGraph.instance().root("/op");
     }
     //@Test
     public void matchActionsOfSingleGroup() throws InterruptedException {
-        Group root = ActionGraphs.instance().root("op");
+        Group root = ActionGraph.instance().root("op");
         root.makeGroup("auto", true).makeGroup("finance", true).makeGroup("sales", true);
         root.changeGroup("auto",true).getAction("notify", true).addObserver(REACTION);
         root.changeGroup("finance",true).getAction("notify", true).addObserver(REACTION);
@@ -42,7 +41,7 @@ public class PredicatesTester {
     @Test
     public void matchActionsByGroupPath() throws InterruptedException {
         String path = "/op/sales.*";
-        Group root = ActionGraphs.instance().root("op");
+        Group root = ActionGraph.instance().root("op");
         root.makeGroup("auto", true).makeGroup("finance", true).makeGroup("sales", true);
         root.changeGroup("auto",true).getAction("notify", true).addObserver(REACTION);
         root.changeGroup("finance",true).getAction("notify", true).addObserver(REACTION);
@@ -55,7 +54,7 @@ public class PredicatesTester {
     @Test
     public void matchActionsByActionPath() throws InterruptedException {
         String path = "/op/sales/direct.*";
-        Group root = ActionGraphs.instance().root("op");
+        Group root = ActionGraph.instance().root("op");
         root.makeGroup("auto", true).makeGroup("finance", true).makeGroup("sales", true);
         root.changeGroup("auto",true).getAction("notify", true).addObserver(REACTION);
         root.changeGroup("finance",true).getAction("notify", true).addObserver(REACTION);

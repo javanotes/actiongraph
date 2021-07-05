@@ -1,24 +1,20 @@
-import org.reactiveminds.actiongraph.ActionGraphs;
-import org.reactiveminds.actiongraph.core.Group;
+import org.reactiveminds.actiongraph.ActionGraph;
+import org.reactiveminds.actiongraph.node.Group;
 import org.reactiveminds.actiongraph.react.Predicates;
 import org.reactiveminds.actiongraph.react.Reaction;
 
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Serializable;
-import java.io.StringWriter;
-import java.util.Arrays;
+import java.io.*;
 import java.util.logging.Logger;
 
 public class Usage {
     public static void main(String[] args) throws InterruptedException {
         reaction();
-        ActionGraphs.instance().release();
+        ActionGraph.instance().release();
     }
 
     static void tester() throws InterruptedException {
         // create root group
-        Group ordersTrigger = ActionGraphs.instance().root("orders");
+        Group ordersTrigger = ActionGraph.instance().root("orders");
         // create action handler - the "reaction"
         Reaction myReaction = new Reaction(){
             @Override
@@ -27,7 +23,7 @@ public class Usage {
             }
 
             @Override
-            public void accept(String actionPath, Serializable event) {
+            public void accept(String actionPath, String event) {
                 // I am at actionPath
                 // I have the event
             }
@@ -47,7 +43,7 @@ public class Usage {
         servicingTrigger.react(Predicates.MATCH_ALL, "some_subevent_signal");
     }
     static void reaction() throws InterruptedException {
-        Group audit = ActionGraphs.instance().createGroup("/Orders");
+        Group audit = ActionGraph.instance().createGroup("/Orders");
         MyReaction myReaction = new MyReaction();
         MyReaction2 myReaction2 = new MyReaction2();
         audit.makeGroup("Inventory", true).makeGroup("Payment", true).makeGroup("Servicing", true);
@@ -74,7 +70,7 @@ public class Usage {
     public static class MyReaction implements Reaction {
         private static final Logger LOG = Logger.getLogger(MyReaction.class.getName());
         @Override
-        public void accept(String context, Serializable serializable) {
+        public void accept(String context, String serializable) {
             LOG.info(String.format("[%s] reaction executed at %s : %s",
                     Thread.currentThread().getName(), context, serializable));
         }
@@ -87,7 +83,7 @@ public class Usage {
     public static class MyReaction2 implements Reaction{
         private static final Logger LOG = Logger.getLogger(MyReaction2.class.getName());
         @Override
-        public void accept(String context, Serializable serializable) {
+        public void accept(String context, String serializable) {
             LOG.info(String.format("[%s] some other reaction at %s : %s",
                     Thread.currentThread().getName(), context, serializable));
         }

@@ -1,17 +1,18 @@
-package org.reactiveminds.actiongraph.core;
+package org.reactiveminds.actiongraph.node;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
-import org.reactiveminds.actiongraph.ActionGraphs;
+import org.reactiveminds.actiongraph.ActionGraph;
+import org.reactiveminds.actiongraph.ActionGraphException;
 
 @RunWith(BlockJUnit4ClassRunner.class)
 public class TestSuite {
     @Test
     public void testCreateDirectoryPath(){
-        ActionGraphs actionGraph = ActionGraphs.instance();
+        ActionGraph actionGraph = ActionGraph.instance();
         Group node = actionGraph.createGroup("/mnt/apps/app1");
         Assert.assertNotNull(node);
         Assert.assertEquals("app1", node.name());
@@ -30,19 +31,25 @@ public class TestSuite {
 
     @Test
     public void testCreateAndChangeDirectories(){
-        ActionGraphs actionGraph = ActionGraphs.instance();
+        ActionGraph actionGraph = ActionGraph.instance();
         Group app1 = actionGraph.createGroup("/mnt/apps/app1");
         Assert.assertNotNull(app1);
         Assert.assertEquals(1, actionGraph.createGroup("/mnt/apps").list().size());
         Group app2 = app1.parent().changeGroup("app2", true);
         Assert.assertEquals(2, actionGraph.createGroup("/mnt/apps").list().size());
     }
+    @Test(expected = ActionGraphException.class)
+    public void testCreateFilePathNotAllowed(){
+        ActionGraph actionGraph = ActionGraph.instance();
+        Action node = actionGraph.createAction("/mnt/apps/app1/", "file.txt");
+        Assert.fail("should be unreachable");
+    }
     @Test
     public void testCreateFilePath(){
-        ActionGraphs actionGraph = ActionGraphs.instance();
-        Action node = actionGraph.createAction("/mnt/apps/app1/", "file.txt");
+        ActionGraph actionGraph = ActionGraph.instance();
+        Action node = actionGraph.createAction("/mnt/apps/app1/", "file");
         Assert.assertNotNull(node);
-        Assert.assertEquals("file.txt", node.name());
+        Assert.assertEquals("file", node.name());
         Assert.assertNotNull(node.parent());
         Group dir = node.parent();
         Assert.assertEquals("app1", dir.name());
@@ -50,10 +57,10 @@ public class TestSuite {
     }
     @Test
     public void testCreateFilePathAndDelete(){
-        ActionGraphs actionGraph = ActionGraphs.instance();
-        Action node = actionGraph.createAction("/mnt/apps/app1/", "file.txt");
+        ActionGraph actionGraph = ActionGraph.instance();
+        Action node = actionGraph.createAction("/mnt/apps/app1/", "file");
         Assert.assertNotNull(node);
-        Assert.assertEquals("file.txt", node.name());
+        Assert.assertEquals("file", node.name());
         Assert.assertNotNull(node.parent());
         Group dir = node.parent();
         Assert.assertEquals("app1", dir.name());
@@ -67,7 +74,7 @@ public class TestSuite {
     }
     @Test
     public void testCreateDirectoryPathAndDelete(){
-        ActionGraphs actionGraph = ActionGraphs.instance();
+        ActionGraph actionGraph = ActionGraph.instance();
         Group node = actionGraph.createGroup("/mnt/apps/app1/");
         node.makeGroup("c1", true).makeGroup("c2", true);
         Group mnt = actionGraph.createGroup("/mnt");

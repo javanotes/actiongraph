@@ -1,4 +1,4 @@
-package org.reactiveminds.actiongraph.core;
+package org.reactiveminds.actiongraph.node;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;

@@ -1,10 +1,9 @@
-package org.reactiveminds.actiongraph.core;
+package org.reactiveminds.actiongraph.node;
 
 import org.reactiveminds.actiongraph.ActionGraphException;
 import org.reactiveminds.actiongraph.Node;
 import org.reactiveminds.actiongraph.react.Reaction;
 
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -27,6 +26,7 @@ public class Action extends AbstractNode{
         subscribers.add(instance);
         return this;
     }
+
     @Override
     public boolean delete() {
         readWriteLock.writeLock().lock();
@@ -46,7 +46,7 @@ public class Action extends AbstractNode{
         return Type.ACTION;
     }
 
-    final void react(Predicate<Node> filter, Serializable signal) {
+    final void react(Predicate<Node> filter, String signal) {
         // this is invoked in actor - thread safe
         subscribers.forEach(reaction -> reaction.accept(path(), signal));
     }

@@ -1,8 +1,8 @@
 package org.reactiveminds.actiongraph;
 
-import org.reactiveminds.actiongraph.core.Action;
-import org.reactiveminds.actiongraph.core.Actors;
-import org.reactiveminds.actiongraph.core.Group;
+import org.reactiveminds.actiongraph.node.Action;
+import org.reactiveminds.actiongraph.node.Actors;
+import org.reactiveminds.actiongraph.node.Group;
 
 import java.io.OutputStream;
 import java.time.Duration;
@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 /**
  * An action graph topology to support hierarchical observers
  */
-public final class ActionGraphs {
+public final class ActionGraph {
     static class SysoutConsoleHandler extends ConsoleHandler{
         @Override
         protected synchronized void setOutputStream(OutputStream out) throws SecurityException {
@@ -36,14 +36,14 @@ public final class ActionGraphs {
         System.out.println("level set: " + targetLevel.getName());
     }
     static {
-        System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] [%4$-7s] %5$s %n");
+        System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] [%4$-7s] %5$s %6$s%n");
         System.setProperty("handlers", "org.reactiveminds.memfs.ActionGroups.SysoutConsoleHandler");
         Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).setUseParentHandlers(false);
         setLevel();
     }
-    private static final Logger LOG = Logger.getLogger(ActionGraphs.class.getName());
-    private ActionGraphs(){}
-    private static ActionGraphs THIS = new ActionGraphs();
+    private static final Logger LOG = Logger.getLogger(ActionGraph.class.getName());
+    private ActionGraph(){}
+    private static ActionGraph THIS = new ActionGraph();
     private final ConcurrentHashMap<String, Root> mounts = new ConcurrentHashMap<>();
 
     private Group getRoot(String name){
@@ -73,7 +73,7 @@ public final class ActionGraphs {
         Actors.instance().shutdown();
         isShutdown = true;
     }
-    public static ActionGraphs instance(){
+    public static ActionGraph instance(){
         return THIS;
     }
     public synchronized Group root(String name){

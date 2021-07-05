@@ -1,11 +1,10 @@
-package org.reactiveminds.actiongraph.core;
+package org.reactiveminds.actiongraph.node;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
 import org.reactiveminds.actiongraph.Node;
 import org.reactiveminds.actiongraph.react.Predicates;
 
-import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
@@ -28,29 +27,29 @@ class NodeActor extends AbstractActor {
     public static Props create(AbstractNode node, AtomicBoolean running) {
         return Props.create(NodeActor.class, node, running);
     }
-    public static Event BranchEvent(Serializable payload, Predicate<Node> predicate){
+    public static Event BranchEvent(String payload, Predicate<Node> predicate){
         return new BranchEvent(payload, predicate);
     }
-    public static Event LeafEvent(Serializable payload, Predicate<Node> predicate){
+    public static Event LeafEvent(String payload, Predicate<Node> predicate){
         return new LeafEvent(payload, predicate);
     }
     public static abstract class Event{
-        public final Serializable payload;
+        public final String payload;
         public final Predicate<Node> predicate;
-        private Event(Serializable payload, Predicate<Node> predicate) {
+        private Event(String payload, Predicate<Node> predicate) {
             this.payload = payload;
             this.predicate = predicate;
         }
     }
     static class BranchEvent extends Event{
 
-        private BranchEvent(Serializable payload, Predicate<Node> predicate) {
+        private BranchEvent(String payload, Predicate<Node> predicate) {
             super(payload, predicate);
         }
     }
     static class LeafEvent extends Event{
 
-        private LeafEvent(Serializable payload, Predicate<Node> predicate) {
+        private LeafEvent(String payload, Predicate<Node> predicate) {
             super(payload, predicate);
         }
     }

@@ -1,6 +1,6 @@
 package org.reactiveminds.actiongraph;
 
-import org.reactiveminds.actiongraph.core.Group;
+import org.reactiveminds.actiongraph.node.Group;
 
 public interface Node {
     enum Type{ACTION, GROUP}

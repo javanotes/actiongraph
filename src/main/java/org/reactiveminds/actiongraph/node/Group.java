@@ -1,11 +1,9 @@
-package org.reactiveminds.actiongraph.core;
+package org.reactiveminds.actiongraph.node;
 
 import org.reactiveminds.actiongraph.ActionGraphException;
 import org.reactiveminds.actiongraph.Node;
 
 import java.io.PrintWriter;
-import java.io.Serializable;
-import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,7 +46,7 @@ public class Group extends AbstractNode{
             gap.append("\t");
         }
         if(level == 0)
-            writer.println(" -" + " " + path());
+            writer.println(" " + path());
         else
             writer.println(gap.toString()+" - "+type() + " " + name());
         gap.append("\t");
@@ -177,7 +175,7 @@ public class Group extends AbstractNode{
         return Type.GROUP;
     }
 
-    public final void react(Predicate<Node> filter, Serializable signal) {
+    public final void react(Predicate<Node> filter, String signal) {
         actorWrapper.tell(NodeActor.BranchEvent(signal, filter), null);
     }
 
