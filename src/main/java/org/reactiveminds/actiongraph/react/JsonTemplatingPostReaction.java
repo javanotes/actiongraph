@@ -1,5 +1,6 @@
 package org.reactiveminds.actiongraph.react;
 
+import org.reactiveminds.actiongraph.ActionGraphException;
 import org.reactiveminds.actiongraph.util.JSEngine;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class JsonTemplatingPostReaction extends StatefulPostApiReaction{
         boolean finish = from == -1;
         while(!finish){
             if((from == -1 && till != -1) || (till == -1 && from != -1) || from >= till)
-                throw new IllegalArgumentException("Parse error. Invalid template - not balanced");
+                throw new ActionGraphException("Parse error. Unbalanced expressions");
             expressions.add( jsonTemplate.substring(from, ++till));
             from = jsonTemplate.indexOf(EXPR_BEGIN, till);
             till = jsonTemplate.indexOf(EXPR_END, till);

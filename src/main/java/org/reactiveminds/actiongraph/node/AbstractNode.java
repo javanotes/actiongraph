@@ -1,17 +1,20 @@
 package org.reactiveminds.actiongraph.node;
 
 import org.reactiveminds.actiongraph.ActionGraphException;
-import org.reactiveminds.actiongraph.Node;
+import org.reactiveminds.actiongraph.actor.ActorReference;
+import org.reactiveminds.actiongraph.actor.Actors;
+import org.reactiveminds.actiongraph.actor.Event;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 
-abstract class AbstractNode implements Node {
-    private static final Logger LOG = Logger.getLogger(AbstractNode.class.getName());
+public abstract class AbstractNode implements Node {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractNode.class);
     protected final ReadWriteLock readWriteLock;
     volatile boolean isDeleted = false;
     @Override
@@ -34,7 +37,7 @@ abstract class AbstractNode implements Node {
         stopActor();
         unlink();
         isDeleted = true;
-        LOG.fine(String.format("deleted %s node '%s'",type(), name()));
+        LOG.debug(String.format("deleted %s node '%s'",type(), name()));
         return isDeleted;
     }
     @Override
@@ -63,9 +66,14 @@ abstract class AbstractNode implements Node {
         id = UUID.randomUUID().toString();
         created = System.currentTimeMillis();
         modified = created;
-        actorWrapper = Actors.instance().actorOf(path(), this);
+        actorReference = Actors.instance().actorOf(path(), this);
     }
-    protected final ActorReference actorWrapper;
+
+    public ActorReference getActorReference() {
+        return actorReference;
+    }
+
+    protected final ActorReference actorReference;
     @Override
     public Group parent() {
         return parent;
@@ -95,13 +103,29 @@ abstract class AbstractNode implements Node {
             readWriteLock.readLock().unlock();
         }
     }
-    final void stopActor(){
-        actorWrapper.tell(new NodeActor.StopEvent(), null);
+    public void stopActorChain(){
+        LOG.debug("Stopping actor on: "+path());
+        if(type() == Node.Type.GROUP){
+            Group branchNode = (Group) this;
+            branchNode.readWriteLock.readLock().lock();
+            try{
+                branchNode.children.entrySet().stream()
+                        .forEach(e -> {
+                            AbstractNode value = (AbstractNode) e.getValue();
+                            value.stopActor();
+                        });
+            }finally {
+                branchNode.readWriteLock.readLock().unlock();
+            }
+        }
+    }
+    private final void stopActor(){
+        actorReference.tell(Event.newEvent(Event.STOP, null, null));
         try {
-            actorWrapper.awaitTermination(Duration.ofSeconds(30));
+            actorReference.awaitTermination(Duration.ofSeconds(30));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
-    abstract void react(Predicate<Node> filter, String signal);
+    public abstract void react(Predicate<Node> filter, String signal);
 }

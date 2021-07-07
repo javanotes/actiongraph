@@ -1,52 +1,34 @@
 package org.reactiveminds.actiongraph;
 
 import org.reactiveminds.actiongraph.node.Action;
-import org.reactiveminds.actiongraph.node.Actors;
+import org.reactiveminds.actiongraph.actor.Actors;
 import org.reactiveminds.actiongraph.node.Group;
+import org.reactiveminds.actiongraph.store.GraphStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.OutputStream;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * An action graph topology to support hierarchical observers
  */
 public final class ActionGraph {
-    static class SysoutConsoleHandler extends ConsoleHandler{
-        @Override
-        protected synchronized void setOutputStream(OutputStream out) throws SecurityException {
-            super.setOutputStream(System.out);
-        }
+
+    private static final Logger LOG = LoggerFactory.getLogger(ActionGraph.class);
+    private ActionGraph(){
+        GraphStore.open();
+        Actors.instance();
     }
-    static void setLevel() {
-        String logLevel = System.getenv().getOrDefault("logLevel", Level.INFO.getName());
-        Level targetLevel = Level.parse(logLevel);
-        Logger root = Logger.getLogger("");
-        root.setLevel(targetLevel);
-        for (Handler handler : root.getHandlers()) {
-            handler.setLevel(targetLevel);
-        }
-        System.out.println("level set: " + targetLevel.getName());
-    }
-    static {
-        System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] [%4$-7s] %5$s %6$s%n");
-        System.setProperty("handlers", "org.reactiveminds.memfs.ActionGroups.SysoutConsoleHandler");
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).setUseParentHandlers(false);
-        setLevel();
-    }
-    private static final Logger LOG = Logger.getLogger(ActionGraph.class.getName());
-    private ActionGraph(){}
     private static ActionGraph THIS = new ActionGraph();
     private final ConcurrentHashMap<String, Root> mounts = new ConcurrentHashMap<>();
 
     private Group getRoot(String name){
+        if(name == null || name.trim().isEmpty() || name.contains("/"))
+            throw new ActionGraphException("Invalid root name - cannot be null/empty, cannot contain '/'");
         if(!mounts.containsKey(name)){
             mounts.putIfAbsent(name, new Root(null, name, new ReentrantReadWriteLock()));
         }
@@ -60,7 +42,7 @@ public final class ActionGraph {
         shutdownThread = new Thread(() -> mounts.values().forEach(root -> {
             LOG.info(String.format("releasing root %s ..", root.path()));
             root.delete();
-            LOG.warning(String.format("** released root %s **", root.path()));
+            LOG.warn(String.format("** released root %s **", root.path()));
         }));
         shutdownThread.start();
         try {
@@ -71,6 +53,7 @@ public final class ActionGraph {
         mounts.clear();
         LOG.info("stopping actor subsystem ..");
         Actors.instance().shutdown();
+        GraphStore.close();
         isShutdown = true;
     }
     public static ActionGraph instance(){
@@ -90,7 +73,7 @@ public final class ActionGraph {
     public synchronized Group createGroup(String path){
         if(isShutdown)
             throw new ActionGraphException("System has been released!");
-        return getPredecessor(path, true);
+        return getPredecessor(path, true, true);
     }
 
     /**
@@ -102,10 +85,16 @@ public final class ActionGraph {
     public synchronized Action createAction(String dirPath, String file){
         if(isShutdown)
             throw new ActionGraphException("System has been released!");
-        Group predecessor = getPredecessor(dirPath, true);
+        Group predecessor = getPredecessor(dirPath, true, true);
         return predecessor.getAction(file, true);
     }
-    private Group getPredecessor(String path, boolean fullPath){
+    public synchronized Action getAction(String dirPath, String file){
+        if(isShutdown)
+            throw new ActionGraphException("System has been released!");
+        Group predecessor = getPredecessor(dirPath, true, false);
+        return predecessor.getAction(file, false);
+    }
+    private Group getPredecessor(String path, boolean fullPath, boolean createIfNotExists){
         if(path == null || path.trim().isEmpty() || !path.startsWith("/"))
             throw new ActionGraphException("Invalid path (should start with \"/\"): "+path);
         String sanitized = path.trim();
@@ -121,7 +110,7 @@ public final class ActionGraph {
         Group root = root(split[0]);
         if(split.length > 1){
             for(int i=1; i< (fullPath ? split.length : split.length-1); i++){
-                root = root.changeGroup(split[i], true);
+                root = root.changeGroup(split[i], createIfNotExists);
             }
         }
         return root;

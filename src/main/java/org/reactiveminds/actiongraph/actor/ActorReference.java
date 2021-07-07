@@ -1,4 +1,4 @@
-package org.reactiveminds.actiongraph.node;
+package org.reactiveminds.actiongraph.actor;
 
 import akka.actor.ActorRef;
 import akka.pattern.AskableActorRef;
@@ -8,7 +8,7 @@ import scala.concurrent.Future;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class ActorReference {
+public class ActorReference {
     private final ActorRef actorRef;
     private final AskableActorRef askableActorRef;
     private final AtomicBoolean running;
@@ -19,11 +19,14 @@ class ActorReference {
         askableActorRef = new AskableActorRef(actorRef);
     }
 
-    public void tell(Object event, ActorReference sender){
-        actorRef.tell(event, sender == null ? ActorRef.noSender() : sender.actorRef);
+    static void deadLetter(Object event){
+        Actors.instance().actorSystem.deadLetters().tell(event, ActorRef.noSender());
     }
-    public Future<Object> ask(Object event, ActorReference sender, Duration timeout){
-        return askableActorRef.ask(event, Timeout.create(timeout), sender == null ? ActorRef.noSender() : sender.actorRef);
+    public void tell(Object event){
+        actorRef.tell(event, actorRef);
+    }
+    public Future<Object> ask(Object event, Duration timeout){
+        return askableActorRef.ask(event, Timeout.create(timeout), actorRef);
     }
     public boolean awaitTermination(Duration duration) throws InterruptedException {
         synchronized (running) {

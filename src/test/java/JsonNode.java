@@ -1,56 +1,60 @@
-package org.reactiveminds.actiongraph.util;
-
-import java.util.*;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public interface JsonNode {
+    ScriptEngine SCRIPT_ENGINE = new ScriptEngineManager().getEngineByName("nashorn");
+    String JSON_FUNC = "Java.asJSONCompatible(%s)";
+
     enum Type{Object, Array, Value, Missing}
+
+    /**
+     * Type of this {@link JsonNode}
+     * @return
+     */
     Type type();
+
+    /**
+     * Textual representation of this node
+     * @return
+     */
     String asText();
+
+    /**
+     * Accessor operation for {@link ObjectNode} types
+     * @param key
+     * @return
+     */
     JsonNode get(String key);
+
+    /**
+     * Accessor operation for {@link ArrayNode} types
+     * @param index
+     * @return
+     */
     JsonNode get(int index);
-    static JsonNode parse(Object doc){
+
+    /**
+     * Read a json string
+     * @param jsonBody
+     * @return
+     */
+    static JsonNode fromText(String jsonBody){
+        Object json = null;
+        try {
+            json = SCRIPT_ENGINE.eval(String.format(JSON_FUNC, jsonBody));
+        }  catch (Exception e) {
+            throw new UncheckedIOException(new IOException("json parse error", e));
+        }
+        return parse(json);
+    }
+    private static JsonNode parse(Object doc){
         return parseValue(doc);
-    }
-    private static void prettyPrint(JsonNode node, StringBuilder writer, int align){
-        String pad = "";
-        for (int i = 0; i < align; i++) {
-            pad += " ";
-        }
-        if(node.type() == Type.Array){
-            writer.append(pad);
-            writer.append("[").append("\n");
-            ArrayNode array = (ArrayNode) node;
-            for(JsonNode item: array.items){
-                prettyPrint(item, writer, align+2);
-            }
-            int length = writer.lastIndexOf(",");
-            writer.deleteCharAt(length);
-            writer.append(pad);
-            writer.append("]").append("\n");
-        }
-        else if(node.type() == Type.Object){
-            writer.append(pad);
-            writer.append("{").append("\n");
-            ObjectNode array = (ObjectNode) node;
-            for(Map.Entry item: array.entries.entrySet()){
-                writer.append(pad).append(pad).append("\"").append(item.getKey()).append("\"")
-                        .append(":");
-                prettyPrint((JsonNode) item.getValue(), writer, -1);
-            }
-            int length = writer.lastIndexOf(",");
-            writer.deleteCharAt(length);
-            writer.append(pad);
-            writer.append("}").append("\n");
-        }
-        else if(node.type() == Type.Value){
-            writer.append(pad).append(node.asText())
-            .append(",").append("\n");
-        }
-    }
-    static String prettyPrint(JsonNode node){
-        StringBuilder writer = new StringBuilder();
-        prettyPrint(node, writer, 2);
-        return writer.toString();
     }
     private static JsonNode parseValue(Object o){
         if(o == null)
@@ -76,18 +80,14 @@ public interface JsonNode {
             return new ValueNode<>(o.toString());
     }
     class ObjectNode implements JsonNode{
-        public Map<String, JsonNode> getEntries() {
-            return entries;
-        }
-
         private final Map<String, JsonNode> entries = new HashMap<>();
         public void put(String key, JsonNode node){
             entries.put(key, node);
         }
 
         @Override
-        public Type type() {
-            return Type.Object;
+        public JsonNode.Type type() {
+            return JsonNode.Type.Object;
         }
 
         @Override
@@ -120,18 +120,14 @@ public interface JsonNode {
         }
     }
     class ArrayNode implements JsonNode{
-        public List<JsonNode> getItems() {
-            return items;
-        }
-
         private final List<JsonNode> items = new ArrayList<>();
         public void add(JsonNode node){
             items.add(node);
         }
 
         @Override
-        public Type type() {
-            return Type.Array;
+        public JsonNode.Type type() {
+            return JsonNode.Type.Array;
         }
 
         @Override
@@ -168,8 +164,8 @@ public interface JsonNode {
         }
 
         @Override
-        public Type type() {
-            return Type.Value;
+        public JsonNode.Type type() {
+            return JsonNode.Type.Value;
         }
 
         @Override
@@ -193,8 +189,8 @@ public interface JsonNode {
     }
     class MissingNode implements JsonNode{
         @Override
-        public Type type() {
-            return Type.Missing;
+        public JsonNode.Type type() {
+            return JsonNode.Type.Missing;
         }
 
         @Override

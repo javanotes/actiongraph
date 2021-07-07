@@ -1,8 +1,8 @@
-package org.reactiveminds.actiongraph;
+package org.reactiveminds.actiongraph.node;
 
-import org.reactiveminds.actiongraph.node.Group;
+import java.io.Serializable;
 
-public interface Node {
+public interface Node extends Serializable {
     enum Type{ACTION, GROUP}
     /**
      *

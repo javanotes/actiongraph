@@ -2,7 +2,7 @@ package org.reactiveminds.actiongraph.node;
 
 import java.util.Objects;
 
-class TimedString implements Comparable<TimedString> {
+public class TimedString implements Comparable<TimedString> {
     private final String text;
     private final long time;
 

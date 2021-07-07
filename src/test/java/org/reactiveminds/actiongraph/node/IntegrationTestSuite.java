@@ -10,6 +10,7 @@ import org.reactiveminds.actiongraph.ActionGraph;
 import org.reactiveminds.actiongraph.react.JsonTemplatingPostReaction;
 import org.reactiveminds.actiongraph.react.Predicates;
 import org.reactiveminds.actiongraph.util.JSEngine;
+import org.reactiveminds.actiongraph.util.JsonNode;
 import spark.Spark;
 
 import java.io.OutputStreamWriter;
@@ -32,10 +33,29 @@ public class IntegrationTestSuite {
         Spark.stop();
     }
     @Test
+    public void testPrettyPrintJson(){
+        JsonNode.ObjectNode objectNode = new JsonNode.ObjectNode();
+        objectNode.put("oneLeaf", new JsonNode.ValueNode<>("ONE"));
+        objectNode.put("oneLeafAgain", new JsonNode.ValueNode<>("AGAIN"));
+        objectNode.put("array", new JsonNode.ArrayNode());
+        JsonNode.ArrayNode array = (JsonNode.ArrayNode) objectNode.get("array");
+        array.add(new JsonNode.ValueNode<>(1));
+        array.add(new JsonNode.ValueNode<>(2));
+        array.add(new JsonNode.ValueNode<>(3));
+        objectNode.put("inner", new JsonNode.ObjectNode());
+        JsonNode.ObjectNode inner = (JsonNode.ObjectNode) objectNode.get("inner");
+        inner.put("isInnerArray", new JsonNode.ValueNode<>(true));
+        inner.put("innerArray", array);
+        System.out.println(JsonNode.prettyPrint(objectNode));
+        System.out.println(objectNode.asText());
+    }
+    @Test
     public void testPostConsumeSuccess() throws InterruptedException {
         Spark.post("/action/receiver", (request, response) -> {
             try {
-                System.out.println("post body: "+ JSEngine.evaluateJson(request.body()).asText());
+                JsonNode jsonNode = JSEngine.evaluateJson(request.body());
+                System.out.println("post body: "+ jsonNode.asText());
+                System.out.println(JsonNode.prettyPrint(jsonNode));
             } catch (Exception e) {
                 e.printStackTrace();
             }

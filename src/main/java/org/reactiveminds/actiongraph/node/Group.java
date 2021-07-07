@@ -1,7 +1,7 @@
 package org.reactiveminds.actiongraph.node;
 
 import org.reactiveminds.actiongraph.ActionGraphException;
-import org.reactiveminds.actiongraph.Node;
+import org.reactiveminds.actiongraph.actor.Event;
 
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class Group extends AbstractNode{
@@ -176,7 +177,23 @@ public class Group extends AbstractNode{
     }
 
     public final void react(Predicate<Node> filter, String signal) {
-        actorWrapper.tell(NodeActor.BranchEvent(signal, filter), null);
+        actorReference.tell(Event.newEvent(Event.GROUP, signal, filter));
     }
 
+    public void walk(Consumer<AbstractNode> visitor){
+        readWriteLock.readLock().lock();
+        try{
+            children.entrySet().stream()
+                    // don't filter at group level. we cannot short circuit, else matching paths will never be reached.
+                    // filters are fired at action levels. hence the only filter kept is PathMatcher.
+                    // the full tree will be traversed always, else a sophisticated (depth first) tree traversal algorithm based on path pattern (?)
+                    .forEach(e -> visitor.accept((AbstractNode) e.getValue()));
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        finally {
+            readWriteLock.readLock().unlock();
+        }
+    }
 }

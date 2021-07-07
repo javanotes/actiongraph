@@ -58,7 +58,7 @@ public class Usage {
         audit.changeGroup("Servicing", false).changeGroup("Integration", true).getAction("TxnLog", true)
                 .addObserver(myReaction).addObserver(myReaction2);
         audit.print(new PrintWriter(new OutputStreamWriter(System.out)));
-        for (int i=0; i<10; i++){
+        for (int i=0; i<1000; i++){
             audit.react(Predicates.MATCH_ALL, "Record_Success__"+i);
             audit.react(Predicates.PathMatcher("/Orders/Servicing/Integration.*"), "Record_Payment_Failure__"+i);
 

@@ -3,16 +3,16 @@ package org.reactiveminds.actiongraph.react;
 import org.reactiveminds.actiongraph.http.Request;
 import org.reactiveminds.actiongraph.http.Response;
 import org.reactiveminds.actiongraph.http.RestResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 public abstract class PostApiReaction implements Reaction {
-    private static final Logger LOGGER = Logger.getLogger(PostApiReaction.class.getSimpleName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostApiReaction.class);
     protected String url;
 
     public PostApiReaction(String url) {
@@ -30,7 +30,7 @@ public abstract class PostApiReaction implements Reaction {
      * @param cause
      */
     protected void onIOError(String event, Throwable cause){
-        LOGGER.log(Level.SEVERE, String.format("[onIOError] POST request creation failed event: %s", event), cause);
+        LOGGER.error(String.format("[onIOError] POST request creation failed event: %s", event), cause);
     }
 
     /**

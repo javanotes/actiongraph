@@ -1,7 +1,6 @@
 package org.reactiveminds.actiongraph.node;
 
 import org.reactiveminds.actiongraph.ActionGraphException;
-import org.reactiveminds.actiongraph.Node;
 import org.reactiveminds.actiongraph.react.Reaction;
 
 import java.util.LinkedList;
@@ -26,6 +25,9 @@ public class Action extends AbstractNode{
         subscribers.add(instance);
         return this;
     }
+    public synchronized <T extends Reaction> boolean removeObserver(final T instance){
+        return subscribers.remove(instance);
+    }
 
     @Override
     public boolean delete() {
@@ -46,7 +48,7 @@ public class Action extends AbstractNode{
         return Type.ACTION;
     }
 
-    final void react(Predicate<Node> filter, String signal) {
+    public final void react(Predicate<Node> filter, String signal) {
         // this is invoked in actor - thread safe
         subscribers.forEach(reaction -> reaction.accept(path(), signal));
     }
