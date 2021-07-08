@@ -5,13 +5,24 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class GroupData implements Serializable {
-    public List<String> getJsonContents() {
-        return jsonContents;
+    public static final String FIELD_ROOT = "root";
+    public static final String FIELD_GRAPH = "graph";
+    private String root;
+    public List<String> getGraphs() {
+        return graphs;
     }
 
-    public void setJsonContents(List<String> jsonContents) {
-        this.jsonContents = jsonContents;
+    public void setGraphs(List<String> graphs) {
+        this.graphs = graphs;
     }
 
-    private List<String> jsonContents = new LinkedList<>();
+    private List<String> graphs = new LinkedList<>();
+
+    public String getRoot() {
+        return root;
+    }
+
+    public void setRoot(String root) {
+        this.root = root;
+    }
 }

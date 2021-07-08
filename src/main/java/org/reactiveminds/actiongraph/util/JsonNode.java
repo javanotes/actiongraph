@@ -111,7 +111,7 @@ public interface JsonNode {
 
         @Override
         public JsonNode get(String key) {
-            return entries.get(key);
+            return entries.containsKey(key) ? entries.get(key) : new MissingNode();
         }
 
         @Override

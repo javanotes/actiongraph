@@ -25,11 +25,11 @@ public class PredicatesTester {
 
     //@Test(expected = ActionGraphException.class)
     public void testNameNotAllowedWithSlash(){
-        ActionGraph.instance().root("/op");
+        ActionGraph.instance().getOrCreateRoot("/op");
     }
     //@Test
     public void matchActionsOfSingleGroup() throws InterruptedException {
-        Group root = ActionGraph.instance().root("op");
+        Group root = ActionGraph.instance().getOrCreateRoot("op");
         root.makeGroup("auto", true).makeGroup("finance", true).makeGroup("sales", true);
         root.changeGroup("auto",true).getAction("notify", true).addObserver(REACTION);
         root.changeGroup("finance",true).getAction("notify", true).addObserver(REACTION);
@@ -41,7 +41,7 @@ public class PredicatesTester {
     @Test
     public void matchActionsByGroupPath() throws InterruptedException {
         String path = "/op/sales.*";
-        Group root = ActionGraph.instance().root("op");
+        Group root = ActionGraph.instance().getOrCreateRoot("op");
         root.makeGroup("auto", true).makeGroup("finance", true).makeGroup("sales", true);
         root.changeGroup("auto",true).getAction("notify", true).addObserver(REACTION);
         root.changeGroup("finance",true).getAction("notify", true).addObserver(REACTION);
@@ -54,7 +54,7 @@ public class PredicatesTester {
     @Test
     public void matchActionsByActionPath() throws InterruptedException {
         String path = "/op/sales/direct.*";
-        Group root = ActionGraph.instance().root("op");
+        Group root = ActionGraph.instance().getOrCreateRoot("op");
         root.makeGroup("auto", true).makeGroup("finance", true).makeGroup("sales", true);
         root.changeGroup("auto",true).getAction("notify", true).addObserver(REACTION);
         root.changeGroup("finance",true).getAction("notify", true).addObserver(REACTION);

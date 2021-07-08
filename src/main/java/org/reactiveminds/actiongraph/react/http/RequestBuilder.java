@@ -1,4 +1,4 @@
-package org.reactiveminds.actiongraph.http;
+package org.reactiveminds.actiongraph.react.http;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * Simple REST client for JSON payloads.
  */
-public class Request {
+public class RequestBuilder {
 
     private static final Map<Integer, String> HTTP_CODES = new HashMap<>();
     static {
@@ -31,7 +31,7 @@ public class Request {
                     }
                 });
     }
-    private Request(URLConnection urlConnection){
+    private RequestBuilder(URLConnection urlConnection){
         this.urlConnection = (HttpURLConnection) urlConnection;
         isHttps = urlConnection instanceof HttpsURLConnection;
         addHeader("Accept-Charset", "utf-8");
@@ -39,7 +39,7 @@ public class Request {
     }
     private final boolean isHttps;
     private final HttpURLConnection urlConnection;
-    public static Request open(String url, Map<String, String> params) throws IOException {
+    public static RequestBuilder open(String url, Map<String, String> params) throws IOException {
         StringBuilder urlStr = new StringBuilder(url);
         if(params != null && !params.isEmpty()){
             urlStr.append("?");
@@ -55,20 +55,20 @@ public class Request {
             }
 
         }
-        return new Request(new URL(urlStr.toString()).openConnection());
+        return new RequestBuilder(new URL(urlStr.toString()).openConnection());
     }
-    public Request addHeader(String key, String value){
+    public RequestBuilder addHeader(String key, String value){
         urlConnection.addRequestProperty(key, value);
         return this;
     }
-    public Request setContentType(String value){
+    public RequestBuilder setContentType(String value){
         return addHeader("Content-Type", value);
     }
-    public Request setReadTimeout(Duration duration){
+    public RequestBuilder setReadTimeout(Duration duration){
         urlConnection.setReadTimeout((int) duration.toMillis());
         return this;
     }
-    public Request setConnectTimeout(Duration duration){
+    public RequestBuilder setConnectTimeout(Duration duration){
         urlConnection.setConnectTimeout((int) duration.toMillis());
         return this;
     }

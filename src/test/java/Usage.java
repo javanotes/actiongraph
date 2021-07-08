@@ -14,7 +14,7 @@ public class Usage {
 
     static void tester() throws InterruptedException {
         // create root group
-        Group ordersTrigger = ActionGraph.instance().root("orders");
+        Group ordersTrigger = ActionGraph.instance().getOrCreateRoot("orders");
         // create action handler - the "reaction"
         Reaction myReaction = new Reaction(){
             @Override

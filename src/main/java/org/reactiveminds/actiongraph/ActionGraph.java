@@ -1,12 +1,14 @@
 package org.reactiveminds.actiongraph;
 
-import org.reactiveminds.actiongraph.node.Action;
 import org.reactiveminds.actiongraph.actor.Actors;
+import org.reactiveminds.actiongraph.node.Action;
 import org.reactiveminds.actiongraph.node.Group;
 import org.reactiveminds.actiongraph.store.GraphStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,13 +22,20 @@ public final class ActionGraph {
 
     private static final Logger LOG = LoggerFactory.getLogger(ActionGraph.class);
     private ActionGraph(){
-        GraphStore.open();
         Actors.instance();
     }
-    private static ActionGraph THIS = new ActionGraph();
+    private static volatile ActionGraph THIS = null;
     private final ConcurrentHashMap<String, Root> mounts = new ConcurrentHashMap<>();
+    String describeRoot(String root){
+        if(!mounts.containsKey(root))
+            return "";
+        Root rootNode = mounts.get(root);
+        StringWriter stringWriter = new StringWriter();
+        rootNode.print(new PrintWriter(stringWriter));
+        return stringWriter.toString();
+    }
 
-    private Group getRoot(String name){
+    private Group root(String name){
         if(name == null || name.trim().isEmpty() || name.contains("/"))
             throw new ActionGraphException("Invalid root name - cannot be null/empty, cannot contain '/'");
         if(!mounts.containsKey(name)){
@@ -57,12 +66,25 @@ public final class ActionGraph {
         isShutdown = true;
     }
     public static ActionGraph instance(){
+        if(THIS == null){
+            synchronized (ActionGraph.class){
+                if(THIS == null){
+                    THIS = new ActionGraph();
+                    GraphStore.open();
+                }
+            }
+        }
         return THIS;
     }
-    public synchronized Group root(String name){
+    public synchronized Group getOrCreateRoot(String name){
         if(isShutdown)
             throw new ActionGraphException("System has been released!");
-        return getRoot(name);
+        return root(name);
+    }
+    public synchronized Group getRoot(String name){
+        if(isShutdown)
+            throw new ActionGraphException("System has been released!");
+        return mounts.get(name);
     }
 
     /**
@@ -75,6 +97,7 @@ public final class ActionGraph {
             throw new ActionGraphException("System has been released!");
         return getPredecessor(path, true, true);
     }
+
 
     /**
      * Create or get action node at given path
@@ -107,7 +130,7 @@ public final class ActionGraph {
         }
         sanitized = String.copyValueOf(chars);
         String[] split = sanitized.split("/");
-        Group root = root(split[0]);
+        Group root = getOrCreateRoot(split[0]);
         if(split.length > 1){
             for(int i=1; i< (fullPath ? split.length : split.length-1); i++){
                 root = root.changeGroup(split[i], createIfNotExists);

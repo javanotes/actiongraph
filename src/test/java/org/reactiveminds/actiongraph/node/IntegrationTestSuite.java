@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.reactiveminds.actiongraph.ActionGraph;
-import org.reactiveminds.actiongraph.react.JsonTemplatingPostReaction;
+import org.reactiveminds.actiongraph.react.http.JsonTemplatingRestReaction;
 import org.reactiveminds.actiongraph.react.Predicates;
 import org.reactiveminds.actiongraph.util.JSEngine;
 import org.reactiveminds.actiongraph.util.JsonNode;
@@ -63,7 +63,7 @@ public class IntegrationTestSuite {
             return "{\"response\": \"OK\"}";
         });
         Group orders = ActionGraph.instance().createGroup("/orders");
-        JsonTemplatingPostReaction reaction = new JsonTemplatingPostReaction("http://localhost:4567/action/receiver", "", JSON_TEMPLATE);
+        JsonTemplatingRestReaction reaction = new JsonTemplatingRestReaction("http://localhost:4567/action/receiver", "", JSON_TEMPLATE);
         orders.getAction("submitToGateway", true).addObserver(reaction);
         orders.print(new PrintWriter(new OutputStreamWriter(System.out)));
         orders.react(Predicates.MATCH_ALL, "001|"+new Date());

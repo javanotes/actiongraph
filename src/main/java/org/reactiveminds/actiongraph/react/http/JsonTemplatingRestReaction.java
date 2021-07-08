@@ -1,4 +1,4 @@
-package org.reactiveminds.actiongraph.react;
+package org.reactiveminds.actiongraph.react.http;
 
 import org.reactiveminds.actiongraph.ActionGraphException;
 import org.reactiveminds.actiongraph.util.JSEngine;
@@ -13,7 +13,7 @@ import static org.reactiveminds.actiongraph.util.JSEngine.EXPR_END;
 /**
  * Simple json templating for POST-ing to rest endpoints
  */
-public class JsonTemplatingPostReaction extends StatefulPostApiReaction{
+public class JsonTemplatingRestReaction extends AbstractExternalizableRestReaction {
 
     private List<String> expressions = new ArrayList<>();
     private static String evaluate(String doc, String template, String expression) {
@@ -47,7 +47,7 @@ public class JsonTemplatingPostReaction extends StatefulPostApiReaction{
      * @param actionPath
      * @param jsonTemplate
      */
-    public JsonTemplatingPostReaction(String url, String actionPath, String jsonTemplate) {
+    public JsonTemplatingRestReaction(String url, String actionPath, String jsonTemplate) {
         super(url, actionPath);
         this.jsonTemplate = jsonTemplate;
         getExpressions();
@@ -57,5 +57,10 @@ public class JsonTemplatingPostReaction extends StatefulPostApiReaction{
     protected String content(String event, Map<String, String> headers) {
         // set additional headers
         return evaluate(event);
+    }
+
+    @Override
+    public void destroy() {
+        // release all
     }
 }

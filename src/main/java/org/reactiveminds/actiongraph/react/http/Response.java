@@ -1,4 +1,4 @@
-package org.reactiveminds.actiongraph.http;
+package org.reactiveminds.actiongraph.react.http;
 
 public class Response {
     int code;

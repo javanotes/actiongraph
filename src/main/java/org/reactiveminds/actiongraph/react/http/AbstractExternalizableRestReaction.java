@@ -1,14 +1,11 @@
-package org.reactiveminds.actiongraph.react;
-
-import org.reactiveminds.actiongraph.http.RestResponse;
+package org.reactiveminds.actiongraph.react.http;
 
 import java.io.*;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class StatefulPostApiReaction extends PostApiReaction implements Externalizable {
+public abstract class AbstractExternalizableRestReaction extends AbstractRestReaction implements Externalizable {
     private String actionPath;
-    public StatefulPostApiReaction(String url, String actionPath) {
+    public AbstractExternalizableRestReaction(String url, String actionPath) {
         super(url);
         this.actionPath = actionPath;
     }

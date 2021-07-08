@@ -7,11 +7,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
-class GraphDataSer implements Serializer<GroupData>, Serializable {
+class GroupDataSer implements Serializer<GroupData>, Serializable {
     @Override
     public void serialize(DataOutput out, GroupData value) throws IOException {
-        out.writeInt(value.getJsonContents().size());
-        for (String s : value.getJsonContents()) {
+        out.writeUTF(value.getRoot());
+        out.writeInt(value.getGraphs().size());
+        for (String s : value.getGraphs()) {
             out.writeUTF(s);
         }
     }
@@ -19,9 +20,10 @@ class GraphDataSer implements Serializer<GroupData>, Serializable {
     @Override
     public GroupData deserialize(DataInput in, int available) throws IOException {
         GroupData groupData = new GroupData();
+        groupData.setRoot(in.readUTF());
         int size = in.readInt();
         for (int i = 0; i < size; i++) {
-            groupData.getJsonContents().add(in.readUTF());
+            groupData.getGraphs().add(in.readUTF());
         }
         return groupData;
     }
