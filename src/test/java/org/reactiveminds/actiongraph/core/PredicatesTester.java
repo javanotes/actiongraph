@@ -1,9 +1,10 @@
-package org.reactiveminds.actiongraph.node;
+package org.reactiveminds.actiongraph.core;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
-import org.reactiveminds.actiongraph.ActionGraph;
+import org.reactiveminds.actiongraph.core.ActionGraph;
+import org.reactiveminds.actiongraph.core.Group;
 import org.reactiveminds.actiongraph.react.Predicates;
 import org.reactiveminds.actiongraph.react.Reaction;
 

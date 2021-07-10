@@ -1,4 +1,4 @@
-package org.reactiveminds.actiongraph.actor;
+package org.reactiveminds.actiongraph.core.actor;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorRefProvider;

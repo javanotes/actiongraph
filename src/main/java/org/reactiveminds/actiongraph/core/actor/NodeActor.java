@@ -1,10 +1,10 @@
-package org.reactiveminds.actiongraph.actor;
+package org.reactiveminds.actiongraph.core.actor;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
-import org.reactiveminds.actiongraph.node.AbstractNode;
-import org.reactiveminds.actiongraph.node.Group;
-import org.reactiveminds.actiongraph.node.Node;
+import org.reactiveminds.actiongraph.core.AbstractNode;
+import org.reactiveminds.actiongraph.core.Group;
+import org.reactiveminds.actiongraph.core.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

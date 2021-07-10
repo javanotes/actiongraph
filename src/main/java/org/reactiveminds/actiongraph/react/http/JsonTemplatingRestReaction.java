@@ -1,6 +1,6 @@
 package org.reactiveminds.actiongraph.react.http;
 
-import org.reactiveminds.actiongraph.ActionGraphException;
+import org.reactiveminds.actiongraph.core.ActionGraphException;
 import org.reactiveminds.actiongraph.util.JSEngine;
 
 import java.util.ArrayList;

@@ -1,9 +1,9 @@
-package org.reactiveminds.actiongraph.actor;
+package org.reactiveminds.actiongraph.core.actor;
 
 import akka.actor.Props;
 import akka.dispatch.BoundedMessageQueueSemantics;
 import akka.dispatch.RequiresMessageQueue;
-import org.reactiveminds.actiongraph.node.AbstractNode;
+import org.reactiveminds.actiongraph.core.AbstractNode;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

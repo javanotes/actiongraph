@@ -1,6 +1,6 @@
-package org.reactiveminds.actiongraph.actor;
+package org.reactiveminds.actiongraph.core.actor;
 
-import org.reactiveminds.actiongraph.node.Node;
+import org.reactiveminds.actiongraph.core.Node;
 import org.reactiveminds.actiongraph.react.Predicates;
 
 import java.io.Serializable;

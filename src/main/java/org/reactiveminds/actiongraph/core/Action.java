@@ -1,6 +1,5 @@
-package org.reactiveminds.actiongraph.node;
+package org.reactiveminds.actiongraph.core;
 
-import org.reactiveminds.actiongraph.ActionGraphException;
 import org.reactiveminds.actiongraph.react.Reaction;
 
 import java.util.LinkedList;

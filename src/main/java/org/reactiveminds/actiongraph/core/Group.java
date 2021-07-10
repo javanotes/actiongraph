@@ -1,7 +1,6 @@
-package org.reactiveminds.actiongraph.node;
+package org.reactiveminds.actiongraph.core;
 
-import org.reactiveminds.actiongraph.ActionGraphException;
-import org.reactiveminds.actiongraph.actor.Event;
+import org.reactiveminds.actiongraph.core.actor.Event;
 
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;

@@ -1,4 +1,4 @@
-package org.reactiveminds.actiongraph;
+package org.reactiveminds.actiongraph.core;
 
 public class ActionGraphException extends IllegalStateException{
     public ActionGraphException(String s) {

@@ -1,12 +1,14 @@
-package org.reactiveminds.actiongraph.node;
+package org.reactiveminds.actiongraph.core;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
-import org.reactiveminds.actiongraph.ActionGraph;
-import org.reactiveminds.actiongraph.ActionGraphException;
+import org.reactiveminds.actiongraph.core.ActionGraph;
+import org.reactiveminds.actiongraph.core.ActionGraphException;
+import org.reactiveminds.actiongraph.core.Action;
+import org.reactiveminds.actiongraph.core.Group;
 
 @RunWith(BlockJUnit4ClassRunner.class)
 public class TestSuite {

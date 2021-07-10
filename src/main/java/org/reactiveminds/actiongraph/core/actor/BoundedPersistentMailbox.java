@@ -1,21 +1,16 @@
-package org.reactiveminds.actiongraph.actor;
+package org.reactiveminds.actiongraph.core.actor;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorRefProvider;
 import akka.actor.ActorSystem;
 import akka.dispatch.*;
-import akka.serialization.Serialization;
 import com.typesafe.config.Config;
-import org.mapdb.Serializer;
-import org.reactiveminds.actiongraph.react.Predicates;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Option;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.Serializable;
-
 public class BoundedPersistentMailbox implements MailboxType, ProducesMessageQueue<PersistentMessageQueue> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BoundedPersistentMailbox.class);
     private int bufferSize;
     private long pushTimeoutMs;
     private int maxRetry;
@@ -27,6 +22,7 @@ public class BoundedPersistentMailbox implements MailboxType, ProducesMessageQue
         maxRetry = config.getInt("mailbox-push-retry");
         backoff = config.getDouble("mailbox-push-retry-backoff");
         provider = Actors.instance().serialization().system().provider();
+        LOGGER.info("Using persistent mailbox of size {}, push timeout {} ms", bufferSize, pushTimeoutMs);
     }
 
     @Override

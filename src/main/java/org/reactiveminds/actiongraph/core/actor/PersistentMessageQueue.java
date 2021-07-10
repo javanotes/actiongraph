@@ -1,9 +1,7 @@
-package org.reactiveminds.actiongraph.actor;
+package org.reactiveminds.actiongraph.core.actor;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorRefFactory;
 import akka.actor.ActorRefProvider;
-import akka.actor.DeadLetter;
 import akka.dispatch.BoundedMessageQueueSemantics;
 import akka.dispatch.Envelope;
 import akka.dispatch.MessageQueue;

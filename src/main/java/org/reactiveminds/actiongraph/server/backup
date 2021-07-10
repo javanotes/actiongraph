@@ -1,5 +1,7 @@
-package org.reactiveminds.actiongraph;
+package org.reactiveminds.actiongraph.server;
 
+import org.reactiveminds.actiongraph.core.ActionGraph;
+import org.reactiveminds.actiongraph.core.ActionGraphException;
 import org.reactiveminds.actiongraph.store.ActionData;
 import org.reactiveminds.actiongraph.util.JSEngine;
 import org.reactiveminds.actiongraph.util.JsonNode;
@@ -14,8 +16,8 @@ import javax.script.ScriptException;
 import java.net.HttpURLConnection;
 import java.util.concurrent.TimeUnit;
 
-public class Server implements Runnable{
-    private static final Logger LOG = LoggerFactory.getLogger(Server.class);
+class SparkServer implements Runnable{
+    private static final Logger LOG = LoggerFactory.getLogger(SparkServer.class);
     @Override
     public void run() {
         Thread.currentThread().setUncaughtExceptionHandler((t, e) -> {
@@ -47,7 +49,7 @@ public class Server implements Runnable{
         Runtime.getRuntime().addShutdownHook(new Thread("shutdownhook"){
             @Override
             public void run(){
-                Server.this.stop();
+                SparkServer.this.stop();
             }
         });
         LOG.info("Server is ready (elapsed {} ms) ", timer.lastLap(TimeUnit.MILLISECONDS));
@@ -58,14 +60,11 @@ public class Server implements Runnable{
         Spark.stop();
     }
 
-    public static void main(String[] args) {
-        new Thread(new Server(), "bootstrap").start();
-    }
     // APIs
     void getGroup(){
         Spark.get("/actiongraph/groups/:root", ((request, response) -> {
             try {
-                String root = ServerHandler.describeRoot(request.params(":root"));
+                String root = ServiceDelegate.describeRoot(request.params(":root"));
                 response.status(HttpURLConnection.HTTP_OK);
                 response.header("Content-Type", "text/plain");
                 return root;
@@ -80,7 +79,7 @@ public class Server implements Runnable{
         Spark.get("/actiongraph/actions", ((request, response) -> {
             try {
                 Assert.isTrue(request.queryParams().contains("path"), "request param 'path' is required");
-                ActionData actionData = ServerHandler.getActionData(request.queryParams("path"));
+                ActionData actionData = ServiceDelegate.getActionData(request.queryParams("path"));
                 response.header("Content-Type", "application/json");
                 response.status(HttpURLConnection.HTTP_OK);
                 return actionData.asJson().asText();
@@ -101,7 +100,7 @@ public class Server implements Runnable{
                 value = node.get("payload");
                 Assert.isTrue(value.type() == JsonNode.Type.Value, "missing field 'payload'");
                 String event = (String) ((JsonNode.ValueNode)value).getValue();
-                boolean fire = ServerHandler.fire(request.params(":root"), path, event);
+                boolean fire = ServiceDelegate.fire(request.params(":root"), path, event);
                 if(fire) {
                     response.status(HttpURLConnection.HTTP_ACCEPTED);
                     return "OK";

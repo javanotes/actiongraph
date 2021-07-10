@@ -1,5 +1,5 @@
-import org.reactiveminds.actiongraph.ActionGraph;
-import org.reactiveminds.actiongraph.node.Group;
+import org.reactiveminds.actiongraph.core.ActionGraph;
+import org.reactiveminds.actiongraph.core.Group;
 import org.reactiveminds.actiongraph.react.Predicates;
 import org.reactiveminds.actiongraph.react.Reaction;
 

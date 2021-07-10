@@ -1,13 +1,12 @@
-package org.reactiveminds.actiongraph;
+package org.reactiveminds.actiongraph.core;
 
-import org.reactiveminds.actiongraph.node.Group;
 import org.reactiveminds.actiongraph.react.Predicates;
 import org.reactiveminds.actiongraph.store.ActionData;
 import org.reactiveminds.actiongraph.store.GraphStore;
 import org.reactiveminds.actiongraph.store.GroupData;
-import spark.utils.Assert;
+import org.reactiveminds.actiongraph.util.Assert;
 
-class ServerHandler {
+public class ActionGraphService {
     /**
      * Add a JsonTemplatingPostReaction action template
 

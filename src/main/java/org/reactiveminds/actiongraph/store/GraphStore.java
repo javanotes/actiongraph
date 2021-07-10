@@ -5,11 +5,11 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
-import org.reactiveminds.actiongraph.ActionGraph;
-import org.reactiveminds.actiongraph.ActionGraphException;
-import org.reactiveminds.actiongraph.node.Action;
-import org.reactiveminds.actiongraph.node.Group;
-import org.reactiveminds.actiongraph.node.Node;
+import org.reactiveminds.actiongraph.core.ActionGraph;
+import org.reactiveminds.actiongraph.core.ActionGraphException;
+import org.reactiveminds.actiongraph.core.Action;
+import org.reactiveminds.actiongraph.core.Group;
+import org.reactiveminds.actiongraph.core.Node;
 import org.reactiveminds.actiongraph.react.http.JsonTemplatingRestReaction;
 import org.reactiveminds.actiongraph.react.Reaction;
 import org.reactiveminds.actiongraph.util.JSEngine;
@@ -25,8 +25,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.stream.Collectors;
+import java.util.concurrent.*;
 
 public class GraphStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphStore.class);
@@ -36,6 +35,10 @@ public class GraphStore {
     private static HTreeMap<String, ActionData> actionDB;
     private static HTreeMap<String, GroupData> groupDB;
     public static BlockingQueue<Envelope> getMailboxQueue(String name, Serializer<Envelope> serializer, int size){
+        if(mapDB.isClosed()){
+            LOGGER.warn("* getMailboxQueue called when db is closed! If this is on shutdown, can be ignored");
+            return new ArrayBlockingQueue<>(size);
+        }
         String qName = "CQ_"+name;
         return mapDB.exists(qName) ? mapDB.getCircularQueue(qName) : mapDB.createCircularQueue(qName, serializer, size);
     }
@@ -151,9 +154,26 @@ public class GraphStore {
                     loadActions();
                     isOpen = true;
                     LOGGER.info("File store opened at: {}", db.getAbsolutePath());
+                    startCommitThread();
                 }
             }
         }
+    }
+
+    private static void startCommitThread() {
+        long period = Long.parseLong(System.getProperty("db.commit.interval.secs", "30"));
+        Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "commit-flush");
+            t.setDaemon(true);
+            return t;
+        }).scheduleWithFixedDelay(()->{
+            try {
+                mapDB.commit();
+                LOGGER.debug("background commit run ..");
+            } catch (Exception e) {
+                LOGGER.error("commit flush error!", e);
+            }
+        }, period, period, TimeUnit.SECONDS);
     }
 
     private static void loadActions() {

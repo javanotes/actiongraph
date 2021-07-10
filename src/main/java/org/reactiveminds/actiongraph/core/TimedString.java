@@ -1,4 +1,4 @@
-package org.reactiveminds.actiongraph.node;
+package org.reactiveminds.actiongraph.core;
 
 import java.util.Objects;
 

@@ -1,8 +1,6 @@
-package org.reactiveminds.actiongraph;
+package org.reactiveminds.actiongraph.core;
 
-import org.reactiveminds.actiongraph.actor.Actors;
-import org.reactiveminds.actiongraph.node.Action;
-import org.reactiveminds.actiongraph.node.Group;
+import org.reactiveminds.actiongraph.core.actor.Actors;
 import org.reactiveminds.actiongraph.store.GraphStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +24,7 @@ public final class ActionGraph {
     }
     private static volatile ActionGraph THIS = null;
     private final ConcurrentHashMap<String, Root> mounts = new ConcurrentHashMap<>();
-    String describeRoot(String root){
+    public String describeRoot(String root){
         if(!mounts.containsKey(root))
             return "";
         Root rootNode = mounts.get(root);
