@@ -1,5 +1,6 @@
 package org.reactiveminds.actiongraph.core;
 
+import org.reactiveminds.actiongraph.react.ActionMatcher;
 import org.reactiveminds.actiongraph.react.Reaction;
 
 import java.util.LinkedList;
@@ -46,9 +47,10 @@ public class Action extends AbstractNode{
     public Type type() {
         return Type.ACTION;
     }
-
-    public final void react(Predicate<Node> filter, String signal) {
+    @Override
+    public final void react(ActionMatcher filter, String signal) {
         // this is invoked in actor - thread safe
-        subscribers.forEach(reaction -> reaction.accept(path(), signal));
+        if(filter.test(this))
+            subscribers.forEach(reaction -> reaction.accept(path(), signal));
     }
 }

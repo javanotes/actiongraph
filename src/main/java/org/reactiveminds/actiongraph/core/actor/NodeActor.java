@@ -29,13 +29,14 @@ class NodeActor extends AbstractActor {
         return Props.create(NodeActor.class, node, running);
     }
     private void fireAction(Event event){
-        if(event.predicate.test(node)) {
-            node.react(event.predicate, event.payload);
-        }
+        node.react(event.predicate, event.payload);
     }
     private void walkTree(Event event){
         Group branchNode = (Group) node;
         branchNode.walk(node -> {
+            // don't filter at group level. we cannot short circuit, else matching paths will never be reached.
+            // filters will be matched at action levels. hence the only filter kept is PathMatcher.
+            // the full tree will be traversed always, else a sophisticated (depth first) tree traversal algorithm based on path pattern (?)
             if(node.type() == Node.Type.GROUP) {
                 node.getActorReference().tell(Event.newEvent(Event.GROUP, event.payload, event.predicate));
             }

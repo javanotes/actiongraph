@@ -5,7 +5,7 @@ import akka.actor.ActorRefProvider;
 import akka.dispatch.Envelope;
 import akka.serialization.Serialization;
 import org.mapdb.Serializer;
-import org.reactiveminds.actiongraph.react.Predicates;
+import org.reactiveminds.actiongraph.react.Matchers;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -32,12 +32,7 @@ class EnvelopeSerializer implements Serializer<Envelope>, Serializable {
             throw new IOException("unsupported event type " + message.getClass());
         Event event = (Event) message;
         String payload = event.payload;
-        String pattern;
-        if (event.predicate instanceof Predicates.PathMatcher) {
-            pattern = ((Predicates.PathMatcher) event.predicate).getPattern().pattern();
-        } else {
-            pattern = "all";
-        }
+        String pattern = event.predicate.pattern();
         out.writeUTF(serializedActorPath);
         out.writeInt(event.id());
         if (payload != null) {
@@ -49,6 +44,7 @@ class EnvelopeSerializer implements Serializer<Envelope>, Serializable {
         if (pattern != null) {
             out.writeByte(1);
             out.writeUTF(pattern);
+            out.writeUTF(event.predicate.getClass().getName());
         } else {
             out.writeByte(0);
         }
@@ -70,9 +66,14 @@ class EnvelopeSerializer implements Serializer<Envelope>, Serializable {
             payload = in.readUTF();
         has = in.readByte();
         String pattern = null;
-        if (has == 1)
+        String type = null;
+        if (has == 1) {
             pattern = in.readUTF();
-        Event event = Event.newEvent(eventId, payload, pattern != null ? "all".equals(pattern) ? Predicates.MATCH_ALL : Predicates.PathMatcher(pattern) : null);
+            type = in.readUTF();
+        }
+        Event event = Event.newEvent(eventId, payload, pattern != null ? "all".equals(pattern) ?
+                Matchers.ALL :
+                type.toUpperCase().contains("REGEX") ? Matchers.REGEX(pattern) : Matchers.PATH(pattern) : null);
         return new Envelope(event, actorRef);
     }
 

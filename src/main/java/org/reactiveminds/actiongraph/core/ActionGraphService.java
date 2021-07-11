@@ -1,6 +1,6 @@
 package org.reactiveminds.actiongraph.core;
 
-import org.reactiveminds.actiongraph.react.Predicates;
+import org.reactiveminds.actiongraph.react.Matchers;
 import org.reactiveminds.actiongraph.store.ActionData;
 import org.reactiveminds.actiongraph.store.GraphStore;
 import org.reactiveminds.actiongraph.store.GroupData;
@@ -36,7 +36,7 @@ public class ActionGraphService {
         Assert.notNull(event, "event is null");
         Group group = ActionGraph.instance().getRoot(root);
         if(group != null){
-            group.react(pathPattern == null ? Predicates.MATCH_ALL : Predicates.PathMatcher(pathPattern), event);
+            group.react(pathPattern == null ? Matchers.ALL : Matchers.REGEX(pathPattern), event);
             return true;
         }
         return false;

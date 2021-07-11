@@ -1,6 +1,7 @@
 package org.reactiveminds.actiongraph.core;
 
 import org.reactiveminds.actiongraph.core.actor.Event;
+import org.reactiveminds.actiongraph.react.ActionMatcher;
 
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
@@ -174,8 +175,8 @@ public class Group extends AbstractNode{
     public Type type() {
         return Type.GROUP;
     }
-
-    public final void react(Predicate<Node> filter, String signal) {
+    @Override
+    public final void react(ActionMatcher filter, String signal) {
         actorReference.tell(Event.newEvent(Event.GROUP, signal, filter));
     }
 
@@ -183,9 +184,6 @@ public class Group extends AbstractNode{
         readWriteLock.readLock().lock();
         try{
             children.entrySet().stream()
-                    // don't filter at group level. we cannot short circuit, else matching paths will never be reached.
-                    // filters are fired at action levels. hence the only filter kept is PathMatcher.
-                    // the full tree will be traversed always, else a sophisticated (depth first) tree traversal algorithm based on path pattern (?)
                     .forEach(e -> visitor.accept((AbstractNode) e.getValue()));
         }
         catch (Exception e){

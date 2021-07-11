@@ -5,6 +5,7 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
+import org.reactiveminds.actiongraph.Bootstrap;
 import org.reactiveminds.actiongraph.core.ActionGraph;
 import org.reactiveminds.actiongraph.core.ActionGraphException;
 import org.reactiveminds.actiongraph.core.Action;
@@ -43,7 +44,10 @@ public class GraphStore {
         return mapDB.exists(qName) ? mapDB.getCircularQueue(qName) : mapDB.createCircularQueue(qName, serializer, size);
     }
     private static File createDB(){
-        File file = new File(System.getProperty("db.file.path", "./db/graphs.dat"));
+        String dbPath = System.getProperty("db.file.path");
+        if(dbPath == null)
+            Bootstrap.exit();
+        File file = new File(dbPath);
         mapDB = DBMaker.newFileDB(file)
                 .closeOnJvmShutdown()
                 .make();
