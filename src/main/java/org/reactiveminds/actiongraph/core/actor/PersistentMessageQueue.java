@@ -6,17 +6,17 @@ import akka.dispatch.BoundedMessageQueueSemantics;
 import akka.dispatch.Envelope;
 import akka.dispatch.MessageQueue;
 import org.reactiveminds.actiongraph.store.GraphStore;
+import org.reactiveminds.actiongraph.store.QueueStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.Duration;
 
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PersistentMessageQueue implements MessageQueue, BoundedMessageQueueSemantics {
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistentMessageQueue.class);
-    private BlockingQueue<Envelope> blockingQueue = null;
+    private QueueStore fileQueue = null;
     private final int size;
     private final long pushTimeoutMs;
     private final ActorRefProvider actorRefProvider;
@@ -46,16 +46,28 @@ public class PersistentMessageQueue implements MessageQueue, BoundedMessageQueue
     }
     private AtomicInteger runningCount = new AtomicInteger();
     private void getQueue(ActorRef receiver){
-        if (blockingQueue == null) {
+        if (fileQueue == null) {
             synchronized (this) {
-                if (blockingQueue == null) {
-                    blockingQueue = GraphStore.getMailboxQueue(receiver.path().name(), new EnvelopeSerializer(), size);
-                    LOGGER.info("Getting mailbox for actor path: {}, ", receiver.path().name());
+                if (fileQueue == null) {
+                    fileQueue = GraphStore.getMailboxQueue(receiver.path().name(), size);
+                    LOGGER.debug("Getting mailbox '{}' for {} ", fileQueue.getName(), receiver);
+                    //clearBacklog();
                 }
             }
 
         }
     }
+
+    private void clearBacklog() {
+        Envelope poll = fileQueue.poll(true);
+        int count = 0;
+        while (poll != null) {
+            ++count;
+            poll = fileQueue.poll(true);
+        }
+        LOGGER.info("mailbox backlog - {}", count);
+    }
+
     @Override
     public void enqueue(ActorRef receiver, Envelope handle) {
         getQueue(receiver);
@@ -63,11 +75,7 @@ public class PersistentMessageQueue implements MessageQueue, BoundedMessageQueue
         boolean offer = false;
         long timeout = pushTimeoutMs;
         while (!offer && retry++ < maxRetry){
-            try {
-                offer = blockingQueue.offer(handle, timeout, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+            offer = fileQueue.offer(handle, java.time.Duration.ofMillis(timeout));
             timeout += Double.valueOf(backoff*pushTimeoutMs).longValue();
         }
         if(offer)
@@ -81,16 +89,20 @@ public class PersistentMessageQueue implements MessageQueue, BoundedMessageQueue
 
     @Override
     public Envelope dequeue() {
-        if(blockingQueue == null)
+        if(fileQueue == null)
             return null;
         else {
-            Envelope poll = blockingQueue.poll();
+            Envelope poll = fileQueue.poll(false);
             if(poll != null)
                 runningCount.decrementAndGet();
             return poll;
         }
     }
 
+    void flush(){
+        LOGGER.debug("flushing queue {}", fileQueue.getName());
+        fileQueue.flush();
+    }
     @Override
     public int numberOfMessages() {
         return runningCount.get();
@@ -103,8 +115,8 @@ public class PersistentMessageQueue implements MessageQueue, BoundedMessageQueue
 
     @Override
     public void cleanUp(ActorRef owner, MessageQueue deadLetters) {
-        while (!blockingQueue.isEmpty()){
-            deadLetters.enqueue(owner, blockingQueue.poll());
+        while (!(fileQueue.size() == 0)){
+            deadLetters.enqueue(owner, fileQueue.poll(true));
         }
     }
 

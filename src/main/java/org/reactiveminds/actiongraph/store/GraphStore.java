@@ -1,78 +1,33 @@
 package org.reactiveminds.actiongraph.store;
 
-import akka.dispatch.Envelope;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
-import org.mapdb.Serializer;
-import org.reactiveminds.actiongraph.Bootstrap;
-import org.reactiveminds.actiongraph.core.ActionGraph;
-import org.reactiveminds.actiongraph.core.ActionGraphException;
-import org.reactiveminds.actiongraph.core.Action;
-import org.reactiveminds.actiongraph.core.Group;
-import org.reactiveminds.actiongraph.core.Node;
-import org.reactiveminds.actiongraph.react.http.JsonTemplatingRestReaction;
+import org.reactiveminds.actiongraph.core.*;
 import org.reactiveminds.actiongraph.react.Reaction;
+import org.reactiveminds.actiongraph.react.http.JsonTemplatingRestReaction;
 import org.reactiveminds.actiongraph.util.JSEngine;
 import org.reactiveminds.actiongraph.util.JsonNode;
+import org.reactiveminds.actiongraph.util.SystemProps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
 
 public class GraphStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphStore.class);
-    static final String GROUPS = "GROUPS";
-    static final String ACTIONS = "ACTIONS";
-    private static DB mapDB;
-    private static HTreeMap<String, ActionData> actionDB;
-    private static HTreeMap<String, GroupData> groupDB;
-    public static BlockingQueue<Envelope> getMailboxQueue(String name, Serializer<Envelope> serializer, int size){
-        if(mapDB.isClosed()){
-            LOGGER.warn("* getMailboxQueue called when db is closed! If this is on shutdown, can be ignored");
-            return new ArrayBlockingQueue<>(size);
-        }
-        String qName = "CQ_"+name;
-        return mapDB.exists(qName) ? mapDB.getCircularQueue(qName) : mapDB.createCircularQueue(qName, serializer, size);
+    private static StoreProvider storeProvider;
+    public static QueueStore getMailboxQueue(String name, int size){
+        return storeProvider.getMailBox(name, size);
     }
-    private static File createDB(){
-        String dbPath = System.getProperty("db.file.path");
-        if(dbPath == null)
-            Bootstrap.exit();
-        File file = new File(dbPath);
-        mapDB = DBMaker.newFileDB(file)
-                .closeOnJvmShutdown()
-                .make();
 
-        groupDB = mapDB.createHashMap(GROUPS)
-                .keySerializer(Serializer.STRING)
-                .valueSerializer(new GroupDataSer())
-                .makeOrGet();
-
-        actionDB = mapDB.createHashMap(ACTIONS)
-                .keySerializer(Serializer.STRING)
-                .valueSerializer(new ActionDataSer())
-                .makeOrGet();
-
-        String configPath = System.getProperty("template.config.dir");
-        if(configPath != null){
-            File f = new File(configPath);
-            if(f.exists() && f.isDirectory()){
-                LOGGER.info("Walking config directory {}, for config file/s of pattern '{}' or '{}'", f, GRP_CONFIG_FILE_PATTERN, ACT_CONFIG_FILE_PATTERN);
-                readConfigs(f);
-                LOGGER.info("Walk complete");
-            }
-        }
-        return file;
-    }
 
     private static String GRP_CONFIG_FILE_PATTERN = System.getProperty("template.config.pattern.group", "g-.*");
     private static String ACT_CONFIG_FILE_PATTERN = System.getProperty("template.config.pattern.action", "a-.*");
@@ -139,94 +94,100 @@ public class GraphStore {
     private static volatile boolean isOpen;
     public static synchronized void close(){
         if(isOpen){
-            if(!mapDB.isClosed()) {
-                mapDB.commit();
-                mapDB.close();
+            try {
+                storeProvider.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
             isOpen = false;
             LOGGER.info("file store closed");
         }
     }
+    private static void openProvider(){
+        try {
+            storeProvider = (StoreProvider) Class.forName(System.getProperty(SystemProps.STORE_PROVIDER, SystemProps.DEFAULT_STORE_PROVIDER)).getConstructor().newInstance();
+        }  catch (Exception e) {
+            throw new ActionGraphException("Unable to load a store provider class!", e);
+        }
+        LOGGER.info("Loading saved configurations ..");
+        storeProvider.open();
+        LOGGER.info("Linking configurations ..");
+        readConfigs();
+        loadGroups();
+        loadActions();
+        isOpen = true;
+    }
     public static void open(){
         if(!isOpen){
             synchronized (GraphStore.class){
                 if(!isOpen){
-                    LOGGER.info("Loading saved configurations ..");
-                    File db = createDB();
-                    LOGGER.info("Linking configurations ..");
-                    loadGroups();
-                    loadActions();
-                    isOpen = true;
-                    LOGGER.info("File store opened at: {}", db.getAbsolutePath());
-                    startCommitThread();
+                    openProvider();
                 }
             }
         }
     }
 
-    private static void startCommitThread() {
-        long period = Long.parseLong(System.getProperty("db.commit.interval.secs", "30"));
-        Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "commit-flush");
-            t.setDaemon(true);
-            return t;
-        }).scheduleWithFixedDelay(()->{
-            try {
-                mapDB.commit();
-                LOGGER.debug("background commit run ..");
-            } catch (Exception e) {
-                LOGGER.error("commit flush error!", e);
+    private static void readConfigs() {
+        String configPath = System.getProperty(SystemProps.TEMPLATE_CONFIG_DIR);
+        if(configPath != null){
+            File f = new File(configPath);
+            if(f.exists() && f.isDirectory()){
+                LOGGER.info("Walking config directory {}, for config file/s of pattern '{}' or '{}'", f, GRP_CONFIG_FILE_PATTERN, ACT_CONFIG_FILE_PATTERN);
+                readConfigs(f);
+                LOGGER.info("Walk complete");
             }
-        }, period, period, TimeUnit.SECONDS);
+        }
     }
 
+
     private static void loadActions() {
-        actionDB.forEach((path, actionData) -> {
-            LOGGER.debug("loading actions at {}", path);
+        storeProvider.loadAllActions().forEach(actionData -> {
+            LOGGER.debug("loading actions at {}", actionData.getActionPath());
             actionData.getProps().forEach(props -> {
                 try {
-                    Action action = buildAction(props.url, props.jsonTemplate, path);
+                    Action action = buildAction(props.url, props.jsonTemplate, actionData.getActionPath());
                     addReaction(action, props.url, props.jsonTemplate);
                 } catch (Exception e) {
-                    LOGGER.error("* Failed to load action {} * Error => {}", path, e.getMessage());
+                    LOGGER.error("* Failed to load action {} * Error => {}", actionData.getActionPath(), e.getMessage());
                     LOGGER.debug("", e);
                 }
             });
         });
+
     }
 
     private static void loadGroups() {
-        groupDB.forEach((root, groupData) -> {
-            LOGGER.debug("loading groups at {}", root);
+        storeProvider.loadAllGroups().forEach(groupData -> {
+            LOGGER.debug("loading groups at {}", groupData.getRoot());
             groupData.getGraphs().forEach(json -> {
                 try {
-                    buildGroup(json, root);
+                    buildGroup(json, groupData.getRoot());
                 } catch (Exception e) {
-                    LOGGER.error("* Failed to load group {} * Error => {}", root, e.getMessage());
+                    LOGGER.error("* Failed to load group {} * Error => {}", groupData.getRoot(), e.getMessage());
                     LOGGER.debug("", e);
                 }
             });
         });
+
     }
 
     public static boolean groupExists(String root){
-        return groupDB.containsKey(root);
+        return storeProvider.groupExists(root);
     }
     public static boolean actionExists(String path){
-        return actionDB.containsKey(path);
+        return storeProvider.actionExists(path);
     }
 
     private static synchronized void commitGroup(String asJson, String graphRoot){
-        GroupData o = groupDB.get(graphRoot);
+        GroupData o = storeProvider.loadGroup(graphRoot);
         if(o == null)
             o = new GroupData();
         o.getGraphs().add(asJson);
         o.setRoot(graphRoot);
-        groupDB.put(graphRoot, o);
-        mapDB.commit();
+        storeProvider.save(graphRoot, o);
     }
     private static synchronized void commitAction(String url, String postTemplate, String actionPath){
-        ActionData o = actionDB.get(actionPath);
+        ActionData o = storeProvider.loadAction(actionPath);
         if(o == null)
             o = new ActionData();
         o.setActionPath(actionPath);
@@ -235,8 +196,7 @@ public class GraphStore {
         props.jsonTemplate = postTemplate;
         o.getProps().remove(props);
         o.getProps().add(props);
-        actionDB.put(actionPath, o);
-        mapDB.commit();
+        storeProvider.save(actionPath, o);
     }
     /**
      * Build a new topology
@@ -318,6 +278,6 @@ public class GraphStore {
     }
 
     public static ActionData actionData(String path) {
-        return actionDB.get(path);
+        return storeProvider.loadAction(path);
     }
 }

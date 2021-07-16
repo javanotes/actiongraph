@@ -99,8 +99,8 @@ class SparkServer implements Runnable{
                 String path = value.type() == JsonNode.Type.Missing ? null : (String) ((JsonNode.ValueNode)value).getValue();
                 value = node.get("payload");
                 Assert.isTrue(value.type() == JsonNode.Type.Value, "missing field 'payload'");
-                String event = (String) ((JsonNode.ValueNode)value).getValue();
-                boolean fire = ServiceDelegate.fire(request.params(":root"), path, event);
+                String command = (String) ((JsonNode.ValueNode)value).getValue();
+                boolean fire = ServiceDelegate.fire(request.params(":root"), path, command);
                 if(fire) {
                     response.status(HttpURLConnection.HTTP_ACCEPTED);
                     return "OK";

@@ -1,6 +1,6 @@
 package org.reactiveminds.actiongraph.core;
 
-import org.reactiveminds.actiongraph.core.actor.Event;
+import org.reactiveminds.actiongraph.core.actor.Command;
 import org.reactiveminds.actiongraph.react.ActionMatcher;
 
 import java.io.PrintWriter;
@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 public class Group extends AbstractNode{
     static String DATEFORMAT = "yyyy/MM/dd HH:mm:ss";
@@ -177,7 +176,7 @@ public class Group extends AbstractNode{
     }
     @Override
     public final void react(ActionMatcher filter, String signal) {
-        actorReference.tell(Event.newEvent(Event.GROUP, signal, filter));
+        actorReference.tell(Command.newCommand(Command.GROUP, signal, filter));
     }
 
     public void walk(Consumer<AbstractNode> visitor){

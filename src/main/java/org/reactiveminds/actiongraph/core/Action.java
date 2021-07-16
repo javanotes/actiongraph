@@ -50,7 +50,10 @@ public class Action extends AbstractNode{
     @Override
     public final void react(ActionMatcher filter, String signal) {
         // this is invoked in actor - thread safe
-        if(filter.test(this))
-            subscribers.forEach(reaction -> reaction.accept(path(), signal));
+        if(filter.test(this)){
+            for (Reaction reaction : subscribers) {
+                reaction.accept(path(), signal);
+            }
+        }
     }
 }

@@ -47,7 +47,7 @@ public class SimpleServer extends Thread implements AutoCloseable{
                 }
             });
             timer.stop();
-            LOGGER.info("Server ready on port {} (elapsed {} ms)",port, timer.lastLap(TimeUnit.MILLISECONDS));
+            LOGGER.info("Server listening on port {} (elapsed {} ms)",port, timer.lastLap(TimeUnit.MILLISECONDS));
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -4,10 +4,13 @@ import akka.actor.ActorRef;
 import akka.actor.ActorRefProvider;
 import akka.actor.ActorSystem;
 import akka.dispatch.*;
+import akka.serialization.Serialization;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BoundedPersistentMailbox implements MailboxType, ProducesMessageQueue<PersistentMessageQueue> {
     private static final Logger LOGGER = LoggerFactory.getLogger(BoundedPersistentMailbox.class);
@@ -22,14 +25,27 @@ public class BoundedPersistentMailbox implements MailboxType, ProducesMessageQue
         maxRetry = config.getInt("mailbox-push-retry");
         backoff = config.getDouble("mailbox-push-retry-backoff");
         provider = Actors.instance().serialization().system().provider();
-        LOGGER.info("Using persistent mailbox of size {}, push timeout {} ms", bufferSize, pushTimeoutMs);
+        LOGGER.debug("Using persistent mailbox of size {}, push timeout {} ms", bufferSize, pushTimeoutMs);
     }
-
+    private static ConcurrentHashMap<String, PersistentMessageQueue> mailboxInstances = new ConcurrentHashMap<>();
+    private static void flush(String actorPath){
+        if(mailboxInstances.containsKey(actorPath)) {
+            mailboxInstances.get(actorPath).flush();
+        }
+    }
+    final static void flush(ActorRef actorRef){
+        flush(actorRef.path().name());
+    }
     @Override
     public MessageQueue create(Option<ActorRef> owner, Option<ActorSystem> system) {
         PersistentMessageQueue messageQueue = new PersistentMessageQueue(bufferSize, pushTimeoutMs, provider);
         messageQueue.setBackoff(backoff);
         messageQueue.setMaxRetry(maxRetry);
+        if(!owner.isEmpty()){
+            String actorPath = owner.get().path().name();
+            mailboxInstances.put(actorPath, messageQueue);
+            LOGGER.debug("Mailbox mapped for {}",actorPath);
+        }
         return messageQueue;
     }
 

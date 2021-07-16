@@ -13,12 +13,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Actors {
-    private final boolean durable;
     private Actors(){
-        durable = Boolean.valueOf(System.getProperty("durable.mailbox", "false"));
         actorSystem = ActorSystem.create("action-groups");
     }
 
+    public ActorRefProvider serializationSystemProvider(){
+        return serialization().system().provider();
+    }
     Serialization serialization(){
         return SerializationExtension.get(actorSystem);
     }
@@ -31,11 +32,9 @@ public class Actors {
      */
     public final ActorReference actorOf(String name, AbstractNode n){
         AtomicBoolean atomicBoolean = new AtomicBoolean();
-        ActorRef actorRef = durable ?
-                actorSystem
-                .actorOf(NodeActorDurable.create(n, atomicBoolean), name.replaceAll("/", "\\.")) :
-                actorSystem
+        ActorRef actorRef = actorSystem
                 .actorOf(NodeActor.create(n, atomicBoolean), name.replaceAll("/", "\\."));
+
         return new ActorReference(actorRef, atomicBoolean);
     }
 

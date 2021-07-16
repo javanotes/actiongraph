@@ -1,5 +1,6 @@
 package org.reactiveminds.actiongraph.util;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 public class Timer {
@@ -24,6 +25,16 @@ public class Timer {
         stopped = started;
         isStopped = false;
         reset++;
+    }
+    public void halt(long fromTime, Duration until){
+        try {
+            Thread.sleep(fromTime + until.toMillis() - System.currentTimeMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        catch (IllegalArgumentException e) {
+            //ignore
+        }
     }
     public long lastLap(TimeUnit unit){
         return unit.convert(stopped - started, TimeUnit.NANOSECONDS);

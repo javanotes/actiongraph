@@ -1,6 +1,7 @@
 package org.reactiveminds.actiongraph;
 
 import org.reactiveminds.actiongraph.server.SimpleServer;
+import org.reactiveminds.actiongraph.util.SystemProps;
 
 public class Bootstrap {
     public static void exit(){
@@ -9,7 +10,7 @@ public class Bootstrap {
         System.exit(1);
     }
     public static void main(String[] args) {
-        int port = Integer.parseInt( System.getProperty("server.port", "-1"));
+        int port = Integer.parseInt( System.getProperty(SystemProps.SERVER_PORT, SystemProps.SERVER_PORT_DEFAULT));
         if(port == -1){
             exit();
         }

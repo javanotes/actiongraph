@@ -2,7 +2,7 @@ package org.reactiveminds.actiongraph.core;
 
 import org.reactiveminds.actiongraph.core.actor.ActorReference;
 import org.reactiveminds.actiongraph.core.actor.Actors;
-import org.reactiveminds.actiongraph.core.actor.Event;
+import org.reactiveminds.actiongraph.core.actor.Command;
 import org.reactiveminds.actiongraph.react.ActionMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,6 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.function.Predicate;
 
 public abstract class AbstractNode implements Node {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractNode.class);
@@ -120,7 +119,7 @@ public abstract class AbstractNode implements Node {
         }
     }
     private final void stopActor(){
-        actorReference.tell(Event.newEvent(Event.STOP, null, null));
+        actorReference.tell(Command.newCommand(Command.STOP, null, null));
         try {
             actorReference.awaitTermination(Duration.ofSeconds(30));
         } catch (InterruptedException e) {

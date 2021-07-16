@@ -1,6 +1,7 @@
-package org.reactiveminds.actiongraph.store;
+package org.reactiveminds.actiongraph.store.mapdb;
 
 import org.mapdb.Serializer;
+import org.reactiveminds.actiongraph.store.ActionData;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -17,8 +18,8 @@ class ActionDataSer implements Serializer<ActionData>, Serializable {
         out.writeUTF(value.getActionPath());
         out.writeInt(value.getProps().size());
         for (ActionData.Props props : value.getProps()) {
-            out.writeUTF(props.url);
-            out.writeUTF(props.jsonTemplate);
+            out.writeUTF(props.getUrl());
+            out.writeUTF(props.getJsonTemplate());
         }
     }
 
@@ -32,8 +33,8 @@ class ActionDataSer implements Serializer<ActionData>, Serializable {
         int size = in.readInt();
         for (int i = 0; i < size; i++) {
             ActionData.Props props = new ActionData.Props();
-            props.url = in.readUTF();
-            props.jsonTemplate = in.readUTF();
+            props.setUrl(in.readUTF());
+            props.setJsonTemplate(in.readUTF());
             groupData.getProps().add(props);
         }
         return groupData;

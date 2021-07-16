@@ -1,6 +1,7 @@
-package org.reactiveminds.actiongraph.store;
+package org.reactiveminds.actiongraph.store.mapdb;
 
 import org.mapdb.Serializer;
+import org.reactiveminds.actiongraph.store.GroupData;
 
 import java.io.DataInput;
 import java.io.DataOutput;
