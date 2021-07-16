@@ -1,5 +1,5 @@
 # Action Graph EMS
-An topology to support hierarchical (decision tree) asynchronous command processing. The framework is built on top of Akka actors. This is a prototype for a lightweight, scalable & reliable __event mediation server,__ which can be used as a sidecar component in a microservice container for __configuration based__ command generation.
+An topology to support hierarchical (decision tree) asynchronous command processing. The framework is built on top of Akka actors. This is a prototype for a lightweight and reliable __event mediation server,__ which can be used as a sidecar component in a microservice container for __configuration based__ command generation.
 
 #### Actions and Groups
 An __action__ is the reactive component in the topology, that can have observer(s) attached to it. A __group__ is a collection of actions (or further groups), thus representing an _action tree_. Each _node_ in the tree will have its _path_ which can be used for filtering the traversal.
