@@ -28,20 +28,15 @@ class ReplayActor extends NodeActor implements RequiresMessageQueue<BoundedMessa
     }
 
     protected void replay(Command.ReplayCommand event) {
-        try {
-            Timer timer = new Timer();
-            timer.halt(event.originTime, event.delay);
-            if(event.originType == 1)
-                walkTree(event);
-            else if(event.originType == 2)
-                fireAction(event);
-            else {
-                logger.warn("something going unhandled! {}", event);
-                unhandled(event);
-            }
-        }
-        finally {
-            BoundedPersistentMailbox.flush(getSelf());
+        Timer timer = new Timer();
+        timer.halt(event.originTime, event.delay);
+        if(event.originType == 1)
+            walkTree(event);
+        else if(event.originType == 2)
+            fireAction(event);
+        else {
+            logger.warn("something going unhandled! {}", event);
+            unhandled(event);
         }
     }
     @Override

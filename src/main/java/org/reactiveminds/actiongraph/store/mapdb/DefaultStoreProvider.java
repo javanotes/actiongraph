@@ -71,7 +71,7 @@ public class DefaultStoreProvider implements StoreProvider {
     private List<QueueStore> queueStores = Collections.synchronizedList(new ArrayList<>());
     @Override
     public QueueStore getMailBox(String name, int size) {
-        QueueStore queueStore = mapDBQueue(name, size);
+        QueueStore queueStore = tapeQueue(name);
         queueStores.add(queueStore);
         return queueStore;
     }

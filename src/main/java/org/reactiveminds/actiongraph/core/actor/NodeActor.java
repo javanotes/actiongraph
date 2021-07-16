@@ -36,6 +36,7 @@ class NodeActor extends AbstractActor {
     void fireAction(Command command){
         try {
             node.react(command.predicate, command.payload);
+            BoundedPersistentMailbox.flush(getSelf());
         } catch (Exception e) {
             BoundedPersistentMailbox.flush(getSelf());
             handleException(command, e);

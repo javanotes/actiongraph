@@ -86,14 +86,14 @@ class EnvelopeSerializer implements Serializer<Envelope>, Serializable {
             int retry = in.readInt();
             long origTime = in.readLong();
             Duration delay = Duration.ofMillis(in.readLong());
-            Command command = Command.newCommand(origType, payload, pattern != null ? "all".equals(pattern) ?
+            Command command = Command.newCommand(origType, payload, pattern != null ? "all".equalsIgnoreCase(pattern) ?
                     Matchers.ALL :
-                    type.toUpperCase().contains("REGEX") ? Matchers.REGEX(pattern) : Matchers.PATH(pattern) : null);
+                    Matchers.REGEX(pattern) : null);
             return new Envelope(new Command.ReplayCommand(command, origTime, delay, retry), actorRef);
         }
-        Command command = Command.newCommand(eventId, payload, pattern != null ? "all".equals(pattern) ?
+        Command command = Command.newCommand(eventId, payload, pattern != null ? "all".equalsIgnoreCase(pattern) ?
                 Matchers.ALL :
-                type.toUpperCase().contains("REGEX") ? Matchers.REGEX(pattern) : Matchers.PATH(pattern) : null);
+                Matchers.REGEX(pattern) : null);
         return new Envelope(command, actorRef);
     }
 

@@ -15,6 +15,7 @@ class TapeQueue implements QueueStore {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try(DataOutputStream out = new DataOutputStream(bytes)){
             serializer.serialize(out, envelope);
+            out.flush();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -31,7 +32,6 @@ class TapeQueue implements QueueStore {
         this.name = name.startsWith(".") ? name.substring(1) : name;
         try {
             queueFile = new QueueFile.Builder(new File(parent, this.name)).zero(true).build();
-            System.out.println(queueFile.toString());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
