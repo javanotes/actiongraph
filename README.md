@@ -64,5 +64,61 @@ ordersTrigger.react(Predicates.MATCH_ALL, "some_event_signal");
 // or from a sub-tree
 servicingTrigger.react(Predicates.MATCH_ALL, "some_subevent_signal");
 ```
-### Event Mediation
-TBD
+## Event Mediation Server
+ActionGraph can be used as a standalone, lightweight, reliable server for mediating event generation to HTTP action endpoints in a configuration driven manner. While this is the default flavour that ships out of the box, the soure code can always be extended to support other type of endpoints (like Kafka), or a different state store provider (uses MapDB and Tape by default).
+
+The library footprint is kept low by using JDK only implementation of JSON and HTTP client/server functionalities - no large dependency trees! The only dependencies used are Akka (thus Scala), [MapDB](https://github.com/jankotek/mapdb/releases/tag/mapdb-1.0.9) and [Tape](https://github.com/square/tape). 
+
+__Please note: It uses *nashorn* script engine, which is supported till Java 10 only__
+
+#### Configuration
+Group configuration example:
+
+```json
+{
+  "root":"orders",
+  "graph":{
+    "txnLogger":"",
+    "serviceLogger":{
+      "sync": "",
+      "async":""
+    }
+  }
+}
+```
+A corresponding action configuration for a path in the above graph.
+```json
+{
+  "actionPath":"/orders/serviceLogger/async",
+  "actionEndpoint": "http://localhost:7070/postLog",
+  "actionTemplate": {
+    "eventType": "serviceLogger",
+    "requestId": "#{$.split(2)[0]}",
+    "message": "event log generated at #{$.split(2)[1]}"
+  }
+}
+```
+Action graph REST API to pass the event payload
+
+`
+POST /actiongraph/fire/orders
+`
+```json
+{
+  "pathPattern": "/orders/.*",
+  "payload": "urn12345678 22/10/21"
+}
+```
+Other APIs:
+
+`
+GET /actiongraph/journal/{corrId}
+`
+
+`
+POST /actiongraph/replay/{corrId}
+`
+
+`
+GET /actiongraph/groups/{root}
+`
