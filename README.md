@@ -109,6 +109,14 @@ POST /actiongraph/fire/orders
   "payload": "urn12345678 22/10/21"
 }
 ```
+This would submit an event to the configured action endpoint (POST http://localhost:7070/postLog)
+```json
+{
+    "eventType": "serviceLogger",
+    "requestId": "urn12345678",
+    "message": "event log generated at 22/10/21"
+}
+```
 Other APIs:
 
 `
