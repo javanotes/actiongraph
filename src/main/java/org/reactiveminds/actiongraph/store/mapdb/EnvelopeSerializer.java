@@ -36,6 +36,7 @@ class EnvelopeSerializer implements Serializer<Envelope>, Serializable {
         Command command = (Command) message;
         String payload = command.payload;
         String pattern = command.predicate.pattern();
+        out.writeUTF(command.correlationId);
         out.writeUTF(serializedActorPath);
         out.writeInt(command.type());
         if (payload != null) {
@@ -65,6 +66,7 @@ class EnvelopeSerializer implements Serializer<Envelope>, Serializable {
         byte b = in.readByte();
         if (b == 0)
             return null;
+        String corrId = in.readUTF();
         String utf = in.readUTF();
         if (actorRefProvider == null)
             actorRefProvider = Actors.instance().serializationSystemProvider();
@@ -86,12 +88,12 @@ class EnvelopeSerializer implements Serializer<Envelope>, Serializable {
             int retry = in.readInt();
             long origTime = in.readLong();
             Duration delay = Duration.ofMillis(in.readLong());
-            Command command = Command.newCommand(origType, payload, pattern != null ? "all".equalsIgnoreCase(pattern) ?
+            Command command = Command.newCommand(corrId, origType, payload, pattern != null ? "all".equalsIgnoreCase(pattern) ?
                     Matchers.ALL :
                     Matchers.REGEX(pattern) : null);
             return new Envelope(new Command.ReplayCommand(command, origTime, delay, retry), actorRef);
         }
-        Command command = Command.newCommand(eventId, payload, pattern != null ? "all".equalsIgnoreCase(pattern) ?
+        Command command = Command.newCommand(corrId, eventId, payload, pattern != null ? "all".equalsIgnoreCase(pattern) ?
                 Matchers.ALL :
                 Matchers.REGEX(pattern) : null);
         return new Envelope(command, actorRef);

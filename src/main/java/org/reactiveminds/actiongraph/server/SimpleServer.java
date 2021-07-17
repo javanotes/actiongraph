@@ -2,9 +2,7 @@ package org.reactiveminds.actiongraph.server;
 
 import com.sun.net.httpserver.HttpServer;
 import org.reactiveminds.actiongraph.core.ActionGraph;
-import org.reactiveminds.actiongraph.server.service.GetAction;
-import org.reactiveminds.actiongraph.server.service.GetGroup;
-import org.reactiveminds.actiongraph.server.service.PostAction;
+import org.reactiveminds.actiongraph.server.service.*;
 import org.reactiveminds.actiongraph.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +55,8 @@ public class SimpleServer extends Thread implements AutoCloseable{
         ServiceRegistry.register(new GetGroup());
         ServiceRegistry.register(new GetAction());
         ServiceRegistry.register(new PostAction());
+        ServiceRegistry.register(new GetJournal());
+        ServiceRegistry.register(new PostReplay());
     }
 
     @Override

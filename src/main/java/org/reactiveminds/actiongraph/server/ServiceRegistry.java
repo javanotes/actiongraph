@@ -1,9 +1,13 @@
 package org.reactiveminds.actiongraph.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 class ServiceRegistry {
+    static final Logger log = LoggerFactory.getLogger(ServiceRegistry.class);
     static class ServiceWrapper{
         @Override
         public boolean equals(Object o) {
@@ -33,6 +37,8 @@ class ServiceRegistry {
         boolean add = registry.add(new ServiceWrapper(new UrlPattern(service.pathPattern()), service));
         if(!add)
             throw new IllegalArgumentException("duplicate path pattern: "+service.pathPattern());
+        else
+            log.info("mapped route: {} {}", service.method(), service.pathPattern());
     }
     public static ServiceWrapper getService(String url){
         if(matchedPaths.containsKey(url))

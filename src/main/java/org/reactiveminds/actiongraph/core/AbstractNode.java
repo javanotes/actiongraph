@@ -119,12 +119,12 @@ public abstract class AbstractNode implements Node {
         }
     }
     private final void stopActor(){
-        actorReference.tell(Command.newCommand(Command.STOP, null, null));
+        actorReference.tell(new Command.StopCommand());
         try {
             actorReference.awaitTermination(Duration.ofSeconds(30));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
-    public abstract void react(ActionMatcher filter, String signal);
+    public abstract void react(String correlationId, ActionMatcher filter, String signal);
 }

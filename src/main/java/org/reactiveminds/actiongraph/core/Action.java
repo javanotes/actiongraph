@@ -48,7 +48,7 @@ public class Action extends AbstractNode{
         return Type.ACTION;
     }
     @Override
-    public final void react(ActionMatcher filter, String signal) {
+    public final void react(String correlationId, ActionMatcher filter, String signal) {
         // this is invoked in actor - thread safe
         if(filter.test(this)){
             for (Reaction reaction : subscribers) {

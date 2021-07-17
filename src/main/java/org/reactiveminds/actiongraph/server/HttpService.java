@@ -7,6 +7,7 @@ public interface HttpService {
     Response doGet(Request request);
     Response doPost(Request request);
     String pathPattern();
+    String method();
     class Response {
         public String getContent() {
             return content;

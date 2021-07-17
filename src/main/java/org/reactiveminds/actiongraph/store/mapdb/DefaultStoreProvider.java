@@ -12,22 +12,25 @@ import org.reactiveminds.actiongraph.util.SystemProps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.time.Duration;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.TimeUnit;
 
-public class DefaultStoreProvider implements StoreProvider {
+public class DefaultStoreProvider implements StoreProvider,EventJournal {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultStoreProvider.class);
     static final String GROUPS = "GROUPS";
     static final String ACTIONS = "ACTIONS";
     private DB mapDB;
     private HTreeMap<String, ActionData> actionDB;
     private HTreeMap<String, GroupData> groupDB;
+    private HTreeMap<String, ActionEntry> eventJournal;
     private File createDB(){
         String dbPath = System.getProperty(SystemProps.DB_FILE_PATH);
         if(dbPath == null)
@@ -46,9 +49,43 @@ public class DefaultStoreProvider implements StoreProvider {
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(new ActionDataSer())
                 .makeOrGet();
+
+        eventJournal = mapDB.createHashMap("EVENTS")
+                .keySerializer(Serializer.STRING)
+                .valueSerializer(new ActionEntrySerializer())
+                .makeOrGet();
+        startJournalCleaner();
         return file;
     }
+
+    private void startJournalCleaner() {
+        Thread t = new Thread("journal-cleaner"){
+            @Override
+            public void run(){
+                boolean running = true;
+                while (running){
+                    try {
+                        QueuedEntry entry = delayQueue.take();
+                        eventJournal.remove(entry.corrId);
+                        LOGGER.info("removed journal entry {}", entry.corrId);
+                    } catch (InterruptedException e) {
+                        running = false;
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        };
+        t.setDaemon(true);
+        t.start();
+    }
+
     private File dbFile;
+
+    @Override
+    public EventJournal getEventJournal() {
+        return this;
+    }
+
     @Override
     public void open() {
         dbFile = createDB();
@@ -132,4 +169,92 @@ public class DefaultStoreProvider implements StoreProvider {
             mapDB.close();
         }
     }
+    private static final long journalExpirySecs = Long.parseLong(System.getProperty(SystemProps.JOURNAL_EXPIRY, SystemProps.JOURNAL_EXPIRY_DEFAULT));
+    static class QueuedEntry implements Delayed{
+        private final String corrId;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            QueuedEntry that = (QueuedEntry) o;
+            return corrId.equals(that.corrId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(corrId);
+        }
+
+        private final long updated;
+
+        QueuedEntry(String corrId, long updated) {
+            this.corrId = corrId;
+            this.updated = updated;
+        }
+
+        @Override
+        public long getDelay(TimeUnit unit) {
+            long delay = updated + Duration.ofSeconds(journalExpirySecs).toMillis() - System.currentTimeMillis();
+            return unit.convert(delay, TimeUnit.MILLISECONDS);
+        }
+
+        @Override
+        public int compareTo(Delayed o) {
+            return Long.compare(getDelay(TimeUnit.NANOSECONDS), o.getDelay(TimeUnit.NANOSECONDS));
+        }
+    }
+    private DelayQueue<QueuedEntry> delayQueue =  new DelayQueue<>();
+    @Override
+    public String createEntry(String root, String pathExpr, String payload) {
+        ActionEntry entry = new ActionEntry();
+        entry.setRoot(root);
+        entry.setPayload(payload);
+        entry.setPathMatcher(pathExpr == null || pathExpr.trim().isEmpty() ? "all" : pathExpr);
+        entry.setStatus(EventJournal.STATUS_PENDING);
+        entry.setCorrelationId(UUID.randomUUID().toString());
+        entry.setCreated(System.currentTimeMillis());
+        entry.setUpdated(entry.getCreated());
+        eventJournal.put(entry.getCorrelationId(), entry);
+        mapDB.commit();
+        queueEntry(entry);
+        return entry.getCorrelationId();
+    }
+
+    @Override
+    public ActionEntry getEntry(String corrId) {
+        return eventJournal.get(corrId);
+    }
+
+    @Override
+    public boolean markSuccess(String correlationId) {
+        return updateEntry(correlationId, EventJournal.STATUS_SUCCESS, null);
+    }
+
+    @Override
+    public boolean markFailed(String correlationId, String cause) {
+        return updateEntry(correlationId, EventJournal.STATUS_FAIL, cause);
+    }
+
+    private void queueEntry(ActionEntry entry){
+        QueuedEntry queuedEntry = new QueuedEntry(entry.getCorrelationId(), entry.getUpdated());
+        delayQueue.remove(queuedEntry);
+        delayQueue.add(queuedEntry);
+    }
+
+    private boolean updateEntry(String correlationId, String status, String addlInfo) {
+        ActionEntry entry = eventJournal.get(correlationId);
+        if(entry != null){
+            entry.setStatus(status);
+            entry.setUpdated(System.currentTimeMillis());
+            if(addlInfo != null)
+                entry.setAddlInfo(addlInfo);
+            eventJournal.put(entry.getCorrelationId(), entry);
+            mapDB.commit();
+            queueEntry(entry);
+            return true;
+        }
+        return false;
+    }
+
 }

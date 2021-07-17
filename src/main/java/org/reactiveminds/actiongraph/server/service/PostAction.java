@@ -3,6 +3,8 @@ package org.reactiveminds.actiongraph.server.service;
 import org.reactiveminds.actiongraph.core.ActionGraphException;
 import org.reactiveminds.actiongraph.core.ActionGraphService;
 import org.reactiveminds.actiongraph.server.HttpService;
+import org.reactiveminds.actiongraph.server.PostHttpService;
+import org.reactiveminds.actiongraph.store.GraphStore;
 import org.reactiveminds.actiongraph.util.Assert;
 import org.reactiveminds.actiongraph.util.JSEngine;
 import org.reactiveminds.actiongraph.util.JsonNode;
@@ -10,11 +12,7 @@ import org.reactiveminds.actiongraph.util.JsonNode;
 import javax.script.ScriptException;
 import java.net.HttpURLConnection;
 
-public class PostAction implements HttpService {
-    @Override
-    public Response doGet(Request request) {
-        return doPost(request);
-    }
+public class PostAction extends PostHttpService {
 
     @Override
     public Response doPost(Request request) {
@@ -27,15 +25,23 @@ public class PostAction implements HttpService {
             value = node.get("payload");
             Assert.isTrue(value.type() == JsonNode.Type.Value, "missing field 'payload'");
             String event = (String) ((JsonNode.ValueNode)value).getValue();
-            boolean fire = ActionGraphService.fire(request.getPathParams().get("root"), path, event);
+            String root = request.getPathParams().get("root");
+            Assert.notNull(root, "root group is missing");
+            String correlationId = GraphStore.getEventJournal().createEntry(root, path, event);
+            boolean fire = ActionGraphService.fire(correlationId, root, path, event);
             if(fire) {
                 response.setStatusCode(HttpURLConnection.HTTP_ACCEPTED);
+                response.setContentType("text/plain");
+                response.setContent(correlationId);
             }
-            else
+            else {
                 response.setStatusCode(HttpURLConnection.HTTP_NOT_ACCEPTABLE);
+            }
         }
         catch (IllegalArgumentException | ActionGraphException | ScriptException e) {
             response.setStatusCode(HttpURLConnection.HTTP_BAD_REQUEST);
+            response.setContentType("text/plain");
+            response.setContent(e.getMessage());
         }
         return response;
     }

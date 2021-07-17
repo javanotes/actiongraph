@@ -2,13 +2,14 @@ package org.reactiveminds.actiongraph.server.service;
 
 import org.reactiveminds.actiongraph.core.ActionGraphService;
 import org.reactiveminds.actiongraph.core.ActionGraphException;
+import org.reactiveminds.actiongraph.server.GetHttpService;
 import org.reactiveminds.actiongraph.server.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.HttpURLConnection;
 
-public class GetGroup implements HttpService {
+public class GetGroup extends GetHttpService {
     private static final Logger log = LoggerFactory.getLogger(GetGroup.class);
     @Override
     public Response doGet(Request request) {
@@ -24,11 +25,6 @@ public class GetGroup implements HttpService {
             log.error("exception running service", e);
         }
         return response;
-    }
-
-    @Override
-    public Response doPost(Request request) {
-        return doGet(request);
     }
 
     @Override

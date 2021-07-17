@@ -4,6 +4,7 @@ import org.reactiveminds.actiongraph.react.Matchers;
 import org.reactiveminds.actiongraph.react.Reaction;
 
 import java.io.*;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public class Usage {
@@ -38,9 +39,9 @@ public class Usage {
         ordersTrigger.getAction("Sales", true).addObserver(myReaction);
 
         // pass event from root, with node filter - or simply, match all
-        ordersTrigger.react(Matchers.ALL, "some_event_signal");
+        ordersTrigger.react(UUID.randomUUID().toString(), Matchers.ALL, "some_event_signal");
         // or from a sub-tree
-        servicingTrigger.react(Matchers.ALL, "some_subevent_signal");
+        servicingTrigger.react(UUID.randomUUID().toString(), Matchers.ALL, "some_subevent_signal");
     }
     static void reaction() throws InterruptedException {
         Group audit = ActionGraph.instance().createGroup("/Orders");
@@ -59,8 +60,8 @@ public class Usage {
                 .addObserver(myReaction).addObserver(myReaction2);
         audit.print(new PrintWriter(new OutputStreamWriter(System.out)));
         for (int i=0; i<1000; i++){
-            audit.react(Matchers.ALL, "Record_Success__"+i);
-            audit.react(Matchers.REGEX("/Orders/Servicing/Integration.*"), "Record_Payment_Failure__"+i);
+            audit.react(UUID.randomUUID().toString(), Matchers.ALL, "Record_Success__"+i);
+            audit.react(UUID.randomUUID().toString(),Matchers.REGEX("/Orders/Servicing/Integration.*"), "Record_Payment_Failure__"+i);
 
         }
         //System.out.println("/Orders/Servicing".matches("/Orders/Servicing/Integration.*"));

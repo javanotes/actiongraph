@@ -31,12 +31,21 @@ public class ActionGraphService {
         Assert.notNull(path);
         return GraphStore.actionExists(path) ? GraphStore.actionData(path) : new ActionData();
     }
-    public static boolean fire(String root, String pathPattern, String event){
+
+    /**
+     * Trigger an action graph to fire event/s
+     * @param correlationId
+     * @param root
+     * @param pathPattern
+     * @param eventPayload
+     * @return
+     */
+    public static boolean fire(String correlationId, String root, String pathPattern, String eventPayload){
         Assert.notNull(root, "root is null");
-        Assert.notNull(event, "event is null");
+        Assert.notNull(eventPayload, "event is null");
         Group group = ActionGraph.instance().getRoot(root);
         if(group != null){
-            group.react(pathPattern == null ? Matchers.ALL : Matchers.REGEX(pathPattern), event);
+            group.react(correlationId, pathPattern == null || pathPattern.equalsIgnoreCase("all") ? Matchers.ALL : Matchers.REGEX(pathPattern), eventPayload);
             return true;
         }
         return false;

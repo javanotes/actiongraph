@@ -11,6 +11,7 @@ import java.util.Date;
 public abstract class Command implements Serializable {
     public final String payload;
     public final ActionMatcher predicate;
+    public final String correlationId;
     public abstract int type();
     public static final int STOP = 3;
     public static final int GROUP = 1;
@@ -23,12 +24,12 @@ public abstract class Command implements Serializable {
      * @param predicate
      * @return
      */
-    public static Command newCommand(int eventType, String payload, ActionMatcher predicate){
+    public static Command newCommand(String correlationId, int eventType, String payload, ActionMatcher predicate){
         switch (eventType){
             case 1:
-                return new GroupCommand(payload, predicate);
+                return new GroupCommand(payload, predicate, correlationId);
             case 2:
-                return new ActionCommand(payload, predicate);
+                return new ActionCommand(payload, predicate, correlationId);
             case 3:
                 return new StopCommand();
             default:
@@ -36,9 +37,10 @@ public abstract class Command implements Serializable {
         }
     }
 
-    protected Command(String payload, ActionMatcher predicate) {
+    protected Command(String payload, ActionMatcher predicate, String correlationId) {
         this.payload = payload;
         this.predicate = predicate;
+        this.correlationId = correlationId;
     }
     public static class ReplayCommand extends Command {
         public final long originTime;
@@ -57,7 +59,7 @@ public abstract class Command implements Serializable {
         }
 
         ReplayCommand(ReplayCommand origin){
-            super(origin.payload, origin.predicate);
+            super(origin.payload, origin.predicate, origin.correlationId);
             this.originType = origin.originType;
             this.originTime = System.currentTimeMillis();
             this.delay = Duration.ofMillis(Double.valueOf(origin.delay.toMillis() * NodeActor.RETRY_BACKOFF).longValue());
@@ -71,7 +73,7 @@ public abstract class Command implements Serializable {
          * @param retryCount
          */
         public ReplayCommand(Command origin, long originTime, Duration delay, int retryCount) {
-            super(origin.payload, origin.predicate);
+            super(origin.payload, origin.predicate, origin.correlationId);
             this.originType = origin.type();
             this.originTime = originTime;
             this.delay = delay;
@@ -89,8 +91,8 @@ public abstract class Command implements Serializable {
             return GROUP;
         }
 
-        GroupCommand(String payload, ActionMatcher predicate) {
-            super(payload, predicate);
+        GroupCommand(String payload, ActionMatcher predicate, String correlationId) {
+            super(payload, predicate, correlationId);
         }
     }
     static class ActionCommand extends Command {
@@ -99,13 +101,13 @@ public abstract class Command implements Serializable {
             return ACTION;
         }
 
-        ActionCommand(String payload, ActionMatcher predicate) {
-            super(payload, predicate);
+        ActionCommand(String payload, ActionMatcher predicate, String correlationId) {
+            super(payload, predicate, correlationId);
         }
     }
-    static class StopCommand extends Command {
-        StopCommand() {
-            super("!#BANG", Matchers.ALL);
+    public static class StopCommand extends Command {
+        public StopCommand() {
+            super("!#BANG", Matchers.ALL, "");
         }
 
         @Override

@@ -175,8 +175,8 @@ public class Group extends AbstractNode{
         return Type.GROUP;
     }
     @Override
-    public final void react(ActionMatcher filter, String signal) {
-        actorReference.tell(Command.newCommand(Command.GROUP, signal, filter));
+    public final void react(String correlationId, ActionMatcher filter, String signal) {
+        actorReference.tell(Command.newCommand(correlationId, Command.GROUP, signal, filter));
     }
 
     public void walk(Consumer<AbstractNode> visitor){

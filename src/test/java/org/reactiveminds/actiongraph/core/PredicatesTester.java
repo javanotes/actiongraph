@@ -7,6 +7,7 @@ import org.reactiveminds.actiongraph.react.Matchers;
 import org.reactiveminds.actiongraph.react.Reaction;
 
 import java.io.*;
+import java.util.UUID;
 
 @RunWith(BlockJUnit4ClassRunner.class)
 public class PredicatesTester {
@@ -46,7 +47,7 @@ public class PredicatesTester {
         root.changeGroup("finance",true).getAction("notify", true).addObserver(REACTION);
         root.changeGroup("sales",true).getAction("notify", true).addObserver(REACTION);
         root.changeGroup("sales",true).changeGroup("direct", true).getAction("notify", true).addObserver(REACTION);
-        root.react(Matchers.REGEX(path), path);
+        root.react(UUID.randomUUID().toString(), Matchers.REGEX(path), path);
         //root.print();
         Thread.sleep(1000);
     }
@@ -60,7 +61,7 @@ public class PredicatesTester {
         root.changeGroup("sales",true).getAction("notify", true).addObserver(REACTION);
         root.changeGroup("sales",true).changeGroup("direct", true).getAction("notify", true).addObserver(REACTION);
         root.print(new PrintWriter(new OutputStreamWriter(System.out)));
-        root.react(Matchers.REGEX(path), path);
+        root.react(UUID.randomUUID().toString(), Matchers.REGEX(path), path);
         //root.print();
         Thread.sleep(2000);
     }

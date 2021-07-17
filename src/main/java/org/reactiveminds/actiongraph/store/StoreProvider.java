@@ -7,6 +7,7 @@ import java.util.List;
  * File store provider
  */
 public interface StoreProvider extends Closeable {
+    EventJournal getEventJournal();
     /**
      * Open the file backed store
      */

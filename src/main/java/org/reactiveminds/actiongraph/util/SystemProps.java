@@ -13,4 +13,6 @@ public interface SystemProps {
     String RETRY_DELAY_DEFAULT = "3000";
     String STORE_PROVIDER = "store.provider.class";
     String DEFAULT_STORE_PROVIDER = "org.reactiveminds.actiongraph.store.mapdb.DefaultStoreProvider";
+    String JOURNAL_EXPIRY = "action.journal.clean.sec";
+    String JOURNAL_EXPIRY_DEFAULT = "180";
 }

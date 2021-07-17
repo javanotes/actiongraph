@@ -280,4 +280,7 @@ public class GraphStore {
     public static ActionData actionData(String path) {
         return storeProvider.loadAction(path);
     }
+    public static EventJournal getEventJournal(){
+        return storeProvider.getEventJournal();
+    }
 }

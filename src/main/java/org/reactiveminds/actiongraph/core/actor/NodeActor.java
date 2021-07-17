@@ -6,6 +6,8 @@ import akka.actor.Props;
 import org.reactiveminds.actiongraph.core.AbstractNode;
 import org.reactiveminds.actiongraph.core.Group;
 import org.reactiveminds.actiongraph.core.Node;
+import org.reactiveminds.actiongraph.store.EventJournal;
+import org.reactiveminds.actiongraph.store.GraphStore;
 import org.reactiveminds.actiongraph.util.Assert;
 import org.reactiveminds.actiongraph.util.SystemProps;
 import org.reactiveminds.actiongraph.util.Utils;
@@ -35,8 +37,9 @@ class NodeActor extends AbstractActor {
     }
     void fireAction(Command command){
         try {
-            node.react(command.predicate, command.payload);
+            node.react(command.correlationId, command.predicate, command.payload);
             BoundedPersistentMailbox.flush(getSelf());
+            GraphStore.getEventJournal().markSuccess(command.correlationId);
         } catch (Exception e) {
             BoundedPersistentMailbox.flush(getSelf());
             handleException(command, e);
@@ -63,8 +66,9 @@ class NodeActor extends AbstractActor {
         }
         else {
             Assert.isTrue(replayActor == null, "Internal error! message retry exhausted, but replayActor is not null");
-            LOG.error("Event is being dropped after {} retry exhausted! \n-- root cause --\n {}", MAX_RETRY, Utils.printPrimaryCause(e, 5));
+            LOG.error("Event is being dropped after {} retry exhausted! \n-- root cause (truncated) --\n {}", MAX_RETRY, Utils.printPrimaryCause(e, 5));
             LOG.debug("", e);
+            GraphStore.getEventJournal().markFailed(command.correlationId, "ACTION_ERR: " + Utils.primaryCause(e).getMessage());
         }
     }
 
@@ -75,10 +79,10 @@ class NodeActor extends AbstractActor {
             // filters will be matched at action levels. hence the only filter kept is PathMatcher.
             // the full tree will be traversed always, else a sophisticated (depth first) tree traversal algorithm based on path pattern (?)
             if(node.type() == Node.Type.GROUP) {
-                node.getActorReference().tell(Command.newCommand(Command.GROUP, command.payload, command.predicate));
+                node.getActorReference().tell(Command.newCommand(command.correlationId, Command.GROUP, command.payload, command.predicate));
             }
             else {
-                node.getActorReference().tell(Command.newCommand(Command.ACTION, command.payload, command.predicate));
+                node.getActorReference().tell(Command.newCommand(command.correlationId, Command.ACTION, command.payload, command.predicate));
             }
         });
     }
