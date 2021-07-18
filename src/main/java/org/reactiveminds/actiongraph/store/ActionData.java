@@ -1,5 +1,6 @@
 package org.reactiveminds.actiongraph.store;
 
+import org.reactiveminds.actiongraph.react.templates.TemplateFunction;
 import org.reactiveminds.actiongraph.util.JsonNode;
 
 import java.io.Serializable;
@@ -37,6 +38,16 @@ public class ActionData implements Serializable {
         return node;
     }
     private String actionPath;
+
+    public String getTemplateEngine() {
+        return templateEngine;
+    }
+
+    public void setTemplateEngine(String templateEngine) {
+        this.templateEngine = templateEngine;
+    }
+
+    private String templateEngine = TemplateFunction.Engine.JavaScript.name();
     public void setProps(Set<Props> props) {
         this.props = props;
     }

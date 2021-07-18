@@ -1,5 +1,7 @@
 package org.reactiveminds.actiongraph.util;
 
+import org.reactiveminds.actiongraph.react.templates.TemplateFunction;
+
 public interface SystemProps {
     String DB_FILE_PATH = "db.file.path";
     String TEMPLATE_CONFIG_DIR = "template.config.dir";
@@ -15,4 +17,10 @@ public interface SystemProps {
     String DEFAULT_STORE_PROVIDER = "org.reactiveminds.actiongraph.store.mapdb.DefaultStoreProvider";
     String JOURNAL_EXPIRY = "action.journal.clean.sec";
     String JOURNAL_EXPIRY_DEFAULT = "180";
+    String KAFKA_PROPS = "kafka.producer.properties";
+    String KAFKA_PROPS_DEFAULT = "kafka.producer.properties";
+    String TEMPLATE_ENGINE = "template.engine";
+    String TEMPLATE_ENGINE_DEFAULT = TemplateFunction.Engine.JavaScript.name();
+    String EVENT_LOG = "event.log.enabled";
+    String EVENT_LOG_DEFAULT = "true";
 }

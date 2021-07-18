@@ -38,7 +38,7 @@ public class BoundedPersistentMailbox implements MailboxType, ProducesMessageQue
     }
     @Override
     public MessageQueue create(Option<ActorRef> owner, Option<ActorSystem> system) {
-        PersistentMessageQueue messageQueue = new PersistentMessageQueue(bufferSize, pushTimeoutMs, provider);
+        PersistentMessageQueue messageQueue = new PersistentMessageQueue(owner.get(), bufferSize, pushTimeoutMs, provider);
         messageQueue.setBackoff(backoff);
         messageQueue.setMaxRetry(maxRetry);
         if(!owner.isEmpty()){

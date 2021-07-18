@@ -39,10 +39,11 @@ public class PersistentMessageQueue implements MessageQueue, BoundedMessageQueue
 
     private int maxRetry;
     private double backoff;
-    public PersistentMessageQueue(int size, long pushTimeoutMs, ActorRefProvider actorRefProvider) {
+    public PersistentMessageQueue(ActorRef actorRef, int size, long pushTimeoutMs, ActorRefProvider actorRefProvider) {
         this.size = size;
         this.actorRefProvider = actorRefProvider;
         this.pushTimeoutMs = pushTimeoutMs;
+        getQueue(actorRef);
     }
     private AtomicInteger runningCount = new AtomicInteger();
     private void getQueue(ActorRef receiver){
@@ -51,21 +52,10 @@ public class PersistentMessageQueue implements MessageQueue, BoundedMessageQueue
                 if (fileQueue == null) {
                     fileQueue = GraphStore.getMailboxQueue(receiver.path().name(), size);
                     LOGGER.debug("Getting mailbox '{}' for {} ", fileQueue.getName(), receiver);
-                    //clearBacklog();
                 }
             }
 
         }
-    }
-
-    private void clearBacklog() {
-        Envelope poll = fileQueue.poll(true);
-        int count = 0;
-        while (poll != null) {
-            ++count;
-            poll = fileQueue.poll(true);
-        }
-        LOGGER.info("mailbox backlog - {}", count);
     }
 
     @Override
@@ -105,7 +95,7 @@ public class PersistentMessageQueue implements MessageQueue, BoundedMessageQueue
     }
     @Override
     public int numberOfMessages() {
-        return runningCount.get();
+        return fileQueue.size();
     }
 
     @Override

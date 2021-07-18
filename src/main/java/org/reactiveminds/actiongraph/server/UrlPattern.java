@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 // ---------------------------------
 // adapted from RestExpress codebase
 // ---------------------------------
-class UrlPattern {
+public class UrlPattern {
     // SECTION: CONSTANTS
 
     @Override

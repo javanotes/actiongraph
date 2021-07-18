@@ -1,5 +1,6 @@
 package org.reactiveminds.actiongraph.util;
 
+import javax.script.ScriptException;
 import java.util.*;
 
 public interface JsonNode {
@@ -8,50 +9,18 @@ public interface JsonNode {
     String asText();
     JsonNode get(String key);
     JsonNode get(int index);
+    default String format(){
+        try {
+            return JSEngine.prettyJson(asText());
+        } catch (ScriptException e) {
+            e.printStackTrace();
+            return asText();
+        }
+    }
     static JsonNode parse(Object doc){
         return parseValue(doc);
     }
-    private static void prettyPrint(JsonNode node, StringBuilder writer, int align){
-        String pad = "";
-        for (int i = 0; i < align; i++) {
-            pad += " ";
-        }
-        if(node.type() == Type.Array){
-            writer.append(pad);
-            writer.append("[").append("\n");
-            ArrayNode array = (ArrayNode) node;
-            for(JsonNode item: array.items){
-                prettyPrint(item, writer, align+2);
-            }
-            int length = writer.lastIndexOf(",");
-            writer.deleteCharAt(length);
-            writer.append(pad);
-            writer.append("]").append("\n");
-        }
-        else if(node.type() == Type.Object){
-            writer.append(pad);
-            writer.append("{").append("\n");
-            ObjectNode array = (ObjectNode) node;
-            for(Map.Entry item: array.entries.entrySet()){
-                writer.append(pad).append(pad).append("\"").append(item.getKey()).append("\"")
-                        .append(":");
-                prettyPrint((JsonNode) item.getValue(), writer, -1);
-            }
-            int length = writer.lastIndexOf(",");
-            writer.deleteCharAt(length);
-            writer.append(pad);
-            writer.append("}").append("\n");
-        }
-        else if(node.type() == Type.Value){
-            writer.append(pad).append(node.asText())
-            .append(",").append("\n");
-        }
-    }
-    static String prettyPrint(JsonNode node){
-        StringBuilder writer = new StringBuilder();
-        prettyPrint(node, writer, 2);
-        return writer.toString();
-    }
+
     private static JsonNode parseValue(Object o){
         if(o == null)
             return new MissingNode();

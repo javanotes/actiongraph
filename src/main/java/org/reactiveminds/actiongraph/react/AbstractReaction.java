@@ -1,6 +1,8 @@
-package org.reactiveminds.actiongraph.react.http;
+package org.reactiveminds.actiongraph.react;
 
-import org.reactiveminds.actiongraph.react.Reaction;
+import org.reactiveminds.actiongraph.react.http.RequestBuilder;
+import org.reactiveminds.actiongraph.react.http.Response;
+import org.reactiveminds.actiongraph.react.http.RestResponse;
 import org.reactiveminds.actiongraph.util.TransientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +14,12 @@ import java.util.Map;
 /**
  * {@link Reaction} base class for Http POST REST endpoints
  */
-public abstract class AbstractRestReaction implements Reaction {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRestReaction.class);
-    protected String url;
+public abstract class AbstractReaction implements Reaction {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractReaction.class);
+    protected String endpoint;
 
-    public AbstractRestReaction(String url) {
-        this.url = url;
+    public AbstractReaction(String endpoint) {
+        this.endpoint = endpoint;
     }
 
     /**
@@ -49,7 +51,7 @@ public abstract class AbstractRestReaction implements Reaction {
         try {
             final Map<String, String> headers = new HashMap<>();
             String content = content(event, headers);
-            RequestBuilder request = RequestBuilder.open(url, Collections.emptyMap());
+            RequestBuilder request = RequestBuilder.open(endpoint, Collections.emptyMap());
             headers.forEach((k,v) -> request.addHeader(k,v));
             Response response = request.doPost(content);
             onResponse(new RestResponse(actionPath, event, response));

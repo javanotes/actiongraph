@@ -1,11 +1,13 @@
-package org.reactiveminds.actiongraph.react.http;
+package org.reactiveminds.actiongraph.react;
+
+import org.reactiveminds.actiongraph.react.http.RestResponse;
 
 import java.io.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class AbstractExternalizableRestReaction extends AbstractRestReaction implements Externalizable {
+public abstract class AbstractSerializableReaction extends AbstractReaction implements Externalizable {
     private String actionPath;
-    public AbstractExternalizableRestReaction(String url, String actionPath) {
+    public AbstractSerializableReaction(String url, String actionPath) {
         super(url);
         this.actionPath = actionPath;
     }
@@ -34,7 +36,7 @@ public abstract class AbstractExternalizableRestReaction extends AbstractRestRea
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeUTF(url);
+        out.writeUTF(endpoint);
         out.writeUTF(actionPath);
         out.writeLong(System.currentTimeMillis());
         out.writeLong(success.get());
@@ -61,7 +63,7 @@ public abstract class AbstractExternalizableRestReaction extends AbstractRestRea
     }
     @Override
     public void readExternal(ObjectInput in) throws IOException {
-        url = in.readUTF();
+        endpoint = in.readUTF();
         actionPath = in.readUTF();
         in.readLong();
         success = new AtomicLong(in.readLong());

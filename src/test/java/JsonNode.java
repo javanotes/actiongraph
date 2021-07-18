@@ -17,7 +17,7 @@ public interface JsonNode {
      * Type of this {@link JsonNode}
      * @return
      */
-    Type type();
+    Type engine();
 
     /**
      * Textual representation of this node
@@ -86,7 +86,7 @@ public interface JsonNode {
         }
 
         @Override
-        public JsonNode.Type type() {
+        public JsonNode.Type engine() {
             return JsonNode.Type.Object;
         }
 
@@ -126,7 +126,7 @@ public interface JsonNode {
         }
 
         @Override
-        public JsonNode.Type type() {
+        public JsonNode.Type engine() {
             return JsonNode.Type.Array;
         }
 
@@ -164,7 +164,7 @@ public interface JsonNode {
         }
 
         @Override
-        public JsonNode.Type type() {
+        public JsonNode.Type engine() {
             return JsonNode.Type.Value;
         }
 
@@ -189,7 +189,7 @@ public interface JsonNode {
     }
     class MissingNode implements JsonNode{
         @Override
-        public JsonNode.Type type() {
+        public JsonNode.Type engine() {
             return JsonNode.Type.Missing;
         }
 

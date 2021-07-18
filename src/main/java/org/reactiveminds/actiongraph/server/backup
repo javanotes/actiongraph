@@ -96,9 +96,9 @@ class SparkServer implements Runnable{
                 Assert.isTrue(!StringUtils.isEmpty(request.body()), "post body missing");
                 JsonNode node = JSEngine.evaluateJson(request.body());
                 JsonNode value = node.get("pathMatcher");
-                String path = value.type() == JsonNode.Type.Missing ? null : (String) ((JsonNode.ValueNode)value).getValue();
+                String path = value.engine() == JsonNode.Type.Missing ? null : (String) ((JsonNode.ValueNode)value).getValue();
                 value = node.get("payload");
-                Assert.isTrue(value.type() == JsonNode.Type.Value, "missing field 'payload'");
+                Assert.isTrue(value.engine() == JsonNode.Type.Value, "missing field 'payload'");
                 String command = (String) ((JsonNode.ValueNode)value).getValue();
                 boolean fire = ServiceDelegate.fire(request.params(":root"), path, command);
                 if(fire) {
