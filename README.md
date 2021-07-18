@@ -66,7 +66,7 @@ servicingTrigger.react(Predicates.MATCH_ALL, "some_subevent_signal");
 ```
 
 ## Event Server
-ActionGraph can be used as a lightweight and reliable __event mediation server__, deployed as a sidecar component in a microservice container for __configuration based__ command generation.
+ActionGraph can be used as a lightweight and reliable __event mediation server__, deployed as a sidecar component in a microservice container for __configuration based__ command generation. The server assumes the responsibility of reliably posting events to the endpoint, including retrying on error and tracing the state. The mediation process uses Akka actor models to execute asynchronously.
 
 While the default flavour generates event to HTTP (post) action endpoints, the soure code can always be extended to support other type of endpoints (like Kafka), or a different state store provider.
 
