@@ -133,3 +133,20 @@ POST /actiongraph/replay/{corrId}
 `
 GET /actiongraph/groups/{root}
 `
+
+#### Kafka endpoints
+Kafka support is being introduced. The action template configuration changes are to be made in the *actionEndpoint* element
+```json
+{
+  "actionPath":"/orders/serviceLogger/async",
+  "actionEndpoint": "kafka://<destinationTopic>:<keyProperty>",
+  "actionTemplate": {
+    "eventType": "serviceLogger",
+    "requestId": "#{$.split(2)[0]}",
+    "message": "event log generated at #{$.split(2)[1]}"
+  }
+}
+```
+
+#### Template Engines
+By default uses __JavaScript__ as the template expression language. _JsonPath_ and _Velocity_ will be introduced (TBD).
