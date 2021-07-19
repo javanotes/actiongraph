@@ -40,6 +40,18 @@ public class EmbeddedServer {
         System.setProperty(SystemProps.KAFKA_SUPPLIER, supplierClass);
         return this;
     }
+    public EmbeddedServer storeProviderImpl(String providerClass){
+        System.setProperty(SystemProps.STORE_PROVIDER, providerClass);
+        return this;
+    }
+    public EmbeddedServer templatePatternGroup(String pattern){
+        System.setProperty(SystemProps.TEMPLATE_CONFIG_GROUP_PATTERN, pattern);
+        return this;
+    }
+    public EmbeddedServer templatePatternAction(String pattern){
+        System.setProperty(SystemProps.TEMPLATE_CONFIG_ACTION_PATTERN, pattern);
+        return this;
+    }
 
     /**
      * Start the server on a dedicated thread

@@ -32,6 +32,8 @@ public interface SystemProps {
     String TEMPLATE_ENGINE_DEFAULT = TemplateFunction.Engine.JavaScript.name();
     String MUTEX_BUCKETS = "store.mutex.buckets";
     String MUTEX_BUCKETS_DEFAULT = "64";
+    String TEMPLATE_CONFIG_GROUP_PATTERN = "template.config.pattern.group";
+    String TEMPLATE_CONFIG_ACTION_PATTERN = "template.config.pattern.action";
 
     List<Class<? extends Throwable>> TRANSIENT_ERRORS = Arrays.asList(TransientException.class, ConnectException.class);
 
