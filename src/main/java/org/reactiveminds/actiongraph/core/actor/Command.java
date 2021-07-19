@@ -17,6 +17,62 @@ public abstract class Command implements Serializable {
     public static final int GROUP = 1;
     public static final int ACTION = 2;
     public static final int REPLAY = 0;
+    public static class DeadLetter {
+        String actionPath;
+        String commandPath;
+
+        public String getActionPath() {
+            return actionPath;
+        }
+
+        public void setActionPath(String actionPath) {
+            this.actionPath = actionPath;
+        }
+
+        public String getCommandPath() {
+            return commandPath;
+        }
+
+        public void setCommandPath(String commandPath) {
+            this.commandPath = commandPath;
+        }
+
+        public String getPayload() {
+            return payload;
+        }
+
+        public void setPayload(String payload) {
+            this.payload = payload;
+        }
+
+        public String getCorrelationId() {
+            return correlationId;
+        }
+
+        public void setCorrelationId(String correlationId) {
+            this.correlationId = correlationId;
+        }
+
+        public String getCause() {
+            return cause;
+        }
+
+        public void setCause(String cause) {
+            this.cause = cause;
+        }
+
+        String payload;
+        String correlationId;
+        String cause;
+        public DeadLetter(Command command, String actionPath, String cause) {
+            this.actionPath = actionPath;
+            this.payload = command.payload;
+            this.commandPath = command.predicate.pattern();
+            this.correlationId = command.correlationId;
+            this.cause = cause;
+        }
+
+    }
     /**
      *
      * @param eventType

@@ -2,6 +2,7 @@ package org.reactiveminds.actiongraph.core;
 
 import org.reactiveminds.actiongraph.core.actor.Actors;
 import org.reactiveminds.actiongraph.store.GraphStore;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

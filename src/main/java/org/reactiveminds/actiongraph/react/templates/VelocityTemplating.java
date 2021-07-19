@@ -1,7 +1,5 @@
 package org.reactiveminds.actiongraph.react.templates;
-
-import java.util.List;
-
+@Deprecated
 class VelocityTemplating extends AbstractTemplateFunction{
     VelocityTemplating(String template) {
         super(template);

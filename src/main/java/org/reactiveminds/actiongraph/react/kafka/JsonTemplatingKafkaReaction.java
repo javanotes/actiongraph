@@ -4,16 +4,17 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.reactiveminds.actiongraph.core.ActionGraphException;
 import org.reactiveminds.actiongraph.react.AbstractTemplateBasedReaction;
 import org.reactiveminds.actiongraph.react.templates.TemplateFunction;
 import org.reactiveminds.actiongraph.server.UrlPattern;
 import org.reactiveminds.actiongraph.util.*;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 
 public class JsonTemplatingKafkaReaction extends AbstractTemplateBasedReaction {
     public static final String KAFKA_TRANSPORT = "kafka://{topic}:{key}";
@@ -27,7 +28,7 @@ public class JsonTemplatingKafkaReaction extends AbstractTemplateBasedReaction {
     public static boolean endpointMatches(String endpoint){
         return urlPattern.matches(endpoint);
     }
-    private Properties config;
+    private Supplier<KafkaProducer<String, String>> producerFactory;
     /**
      * @param url
      * @param actionPath
@@ -36,9 +37,8 @@ public class JsonTemplatingKafkaReaction extends AbstractTemplateBasedReaction {
 
     private String topicName;
     private String keyProperty;
-    private void setup(){
-        Assert.isTrue(urlPattern.matches(endpoint), "Not a valid Kafka url! "+ endpoint);
-        config = new Properties();
+    private void configure(){
+        final Properties config = new Properties();
         Map<String, String> map = urlPattern.match(endpoint);
         topicName = map.get("topic");
         keyProperty = map.get("key");
@@ -57,6 +57,22 @@ public class JsonTemplatingKafkaReaction extends AbstractTemplateBasedReaction {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        producerFactory = () -> new KafkaProducer<>(config);
+    }
+    private void setup(){
+        Assert.isTrue(urlPattern.matches(endpoint), "Not a valid Kafka url! "+ endpoint);
+        String supplier = System.getProperty(SystemProps.KAFKA_SUPPLIER);
+        if(supplier != null){
+            try {
+                producerFactory = (Supplier<KafkaProducer<String, String>>) Class.forName(supplier).getConstructor().newInstance();
+            } catch (Exception e) {
+                throw new ActionGraphException("Unable to initialize producer supplier", e);
+            }
+        }
+        else{
+            configure();
+        }
+
     }
 
     @Override
@@ -74,9 +90,9 @@ public class JsonTemplatingKafkaReaction extends AbstractTemplateBasedReaction {
         try {
             final Map<String, String> headers = new HashMap<>();
             String content = content(event, headers);
-            JsonNode node = JSEngine.evaluateJson(content);
+            JsonNode node = ScriptUtil.evaluateJson(content);
             JsonNode key = node.get(keyProperty);
-            try(Producer<String, String> producer = new KafkaProducer<>(config)){
+            try(Producer<String, String> producer = producerFactory.get()){
                 producer.send(new ProducerRecord<>(topicName, key.asText(), content)).get();
             }
 

@@ -3,7 +3,9 @@ package org.reactiveminds.actiongraph.react;
 import org.reactiveminds.actiongraph.react.http.RequestBuilder;
 import org.reactiveminds.actiongraph.react.http.Response;
 import org.reactiveminds.actiongraph.react.http.RestResponse;
-import org.reactiveminds.actiongraph.util.TransientException;
+import org.reactiveminds.actiongraph.util.Utils;
+import org.reactiveminds.actiongraph.util.err.NonTransientException;
+import org.reactiveminds.actiongraph.util.err.TransientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +32,10 @@ public abstract class AbstractReaction implements Reaction {
     protected void onIOError(String event, Throwable cause){
         LOGGER.debug(String.format("POST request failed for payload '%s' ==> %s", event, cause.getMessage()));
         LOGGER.debug("", cause);
-        throw new TransientException(cause);
+        if(Utils.isTransientError(cause)){
+            throw new TransientException(cause);
+        }
+        throw new NonTransientException(cause);
     }
 
     /**

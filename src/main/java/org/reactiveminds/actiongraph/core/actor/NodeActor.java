@@ -37,9 +37,12 @@ class NodeActor extends AbstractActor {
     }
     void fireAction(Command command){
         try {
-            node.react(command.correlationId, command.predicate, command.payload);
+            if(command.predicate.test(node)){
+                if(node.react(command.correlationId, command.predicate, command.payload)){
+                    GraphStore.getEventJournal().markSuccess(command.correlationId, node.path());
+                }
+            }
             BoundedPersistentMailbox.flush(getSelf());
-            GraphStore.getEventJournal().markSuccess(command.correlationId);
         } catch (Exception e) {
             BoundedPersistentMailbox.flush(getSelf());
             handleException(command, e);
@@ -49,14 +52,24 @@ class NodeActor extends AbstractActor {
     public static final double RETRY_BACKOFF = Double.parseDouble(System.getProperty(SystemProps.RETRY_BACKOFF, SystemProps.RETRY_BACKOFF_DEFAULT));
     public static final long INITIAL_RETRY_DELAY = Long.parseLong(System.getProperty(SystemProps.RETRY_DELAY, SystemProps.RETRY_DELAY_DEFAULT));
 
+    private void deadLetter(Command command, Throwable e){
+        LOG.error("[{}] Event is being dropped => {}", node.path(), e.getMessage());
+        LOG.debug("", e);
+        //getContext().getSystem().deadLetters().tell(new Command.DeadLetter(command, node.path(), Utils.primaryCause(e).getMessage()), getSelf());
+        GraphStore.getEventJournal().markFailed(command.correlationId, node.path(),"ACTION_ERR: " + Utils.primaryCause(e).getMessage().substring(0,30));
+    }
     private void handleException(Command command, Exception e) {
+        if(!Utils.isTransientError(e)){
+            deadLetter(command, e);
+            return;
+        }
         Command.ReplayCommand replayEvent;
         if(command.type() == 0){
             // it is in child retry actor
             replayEvent = new Command.ReplayCommand((Command.ReplayCommand) command);
         }
         else {
-            LOG.warn("Event will be backed off and retried on exception => {}", e.getMessage());
+            LOG.warn("[{}] Event will be backed off and retried on exception => {}", node.path(), Utils.primaryCause(e).getMessage());
             // initial retry. so it is in parent actor
             replayEvent = new Command.ReplayCommand(command, System.currentTimeMillis(), Duration.ofMillis(INITIAL_RETRY_DELAY), 0);
         }
@@ -66,9 +79,7 @@ class NodeActor extends AbstractActor {
         }
         else {
             Assert.isTrue(replayActor == null, "Internal error! message retry exhausted, but replayActor is not null");
-            LOG.error("Event is being dropped after {} retry exhausted! \n-- root cause (truncated) --\n {}", MAX_RETRY, Utils.printPrimaryCause(e, 5));
-            LOG.debug("", e);
-            GraphStore.getEventJournal().markFailed(command.correlationId, "ACTION_ERR: " + Utils.primaryCause(e).getMessage());
+            deadLetter(command, e);
         }
     }
 

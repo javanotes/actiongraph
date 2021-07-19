@@ -2,6 +2,7 @@ package org.reactiveminds.actiongraph.core;
 
 import org.reactiveminds.actiongraph.core.actor.Command;
 import org.reactiveminds.actiongraph.react.ActionMatcher;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
@@ -175,8 +176,9 @@ public class Group extends AbstractNode{
         return Type.GROUP;
     }
     @Override
-    public final void react(String correlationId, ActionMatcher filter, String signal) {
+    public final boolean react(String correlationId, ActionMatcher filter, String signal) {
         actorReference.tell(Command.newCommand(correlationId, Command.GROUP, signal, filter));
+        return true;
     }
 
     public void walk(Consumer<AbstractNode> visitor){

@@ -1,14 +1,10 @@
 package org.reactiveminds.actiongraph.react;
 
-import org.reactiveminds.actiongraph.react.http.RequestBuilder;
-import org.reactiveminds.actiongraph.react.http.Response;
-import org.reactiveminds.actiongraph.react.http.RestResponse;
 import org.reactiveminds.actiongraph.react.templates.TemplateFunction;
-import org.reactiveminds.actiongraph.util.JSEngine;
+import org.reactiveminds.actiongraph.util.ScriptUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,7 +18,7 @@ public class LoggingTemplateBasedReaction extends AbstractTemplateBasedReaction{
         try {
             final Map<String, String> headers = new HashMap<>();
             String content = content(event, headers);
-            LOGGER.info("actionPath: {}, event: {}",actionPath, JSEngine.prettyJson(content));
+            LOGGER.info("actionPath: {}, event: {}",actionPath, ScriptUtil.prettyJson(content));
         }
         catch (Exception e) {
             onIOError(event, e);

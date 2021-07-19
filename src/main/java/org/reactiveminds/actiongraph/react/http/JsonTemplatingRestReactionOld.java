@@ -1,9 +1,9 @@
 package org.reactiveminds.actiongraph.react.http;
 
-import org.reactiveminds.actiongraph.core.ActionGraphException;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 import org.reactiveminds.actiongraph.react.AbstractSerializableReaction;
 import org.reactiveminds.actiongraph.react.templates.TemplateFunction;
-import org.reactiveminds.actiongraph.util.JSEngine;
+import org.reactiveminds.actiongraph.util.ScriptUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ class JsonTemplatingRestReactionOld extends AbstractSerializableReaction {
 
     private List<String> expressions = new ArrayList<>();
     private static String evaluate(String doc, String template, String expression) {
-        return JSEngine.evaluateTemplate(doc, template, expression);
+        return ScriptUtil.evaluateTemplate(doc, template, expression);
     }
     private String evaluate(String doc) {
         String result = jsonTemplate;

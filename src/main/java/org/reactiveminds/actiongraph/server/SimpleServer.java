@@ -3,6 +3,7 @@ package org.reactiveminds.actiongraph.server;
 import com.sun.net.httpserver.HttpServer;
 import org.reactiveminds.actiongraph.core.ActionGraph;
 import org.reactiveminds.actiongraph.server.service.*;
+import org.reactiveminds.actiongraph.util.SystemProps;
 import org.reactiveminds.actiongraph.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +12,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
-public class SimpleServer extends Thread implements AutoCloseable{
+class SimpleServer extends Thread implements AutoCloseable{
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleServer.class);
     private final int port;
     private HttpServer httpServer;
@@ -20,6 +21,9 @@ public class SimpleServer extends Thread implements AutoCloseable{
     public SimpleServer(int port) {
         super("bootstrap");
         this.port = port;
+    }
+    public SimpleServer() {
+        this(Integer.parseInt(System.getProperty(SystemProps.SERVER_PORT, SystemProps.SERVER_PORT_DEFAULT)));
     }
 
     private volatile boolean running;

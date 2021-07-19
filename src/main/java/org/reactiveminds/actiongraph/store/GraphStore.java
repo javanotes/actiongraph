@@ -6,9 +6,8 @@ import org.reactiveminds.actiongraph.react.Reaction;
 import org.reactiveminds.actiongraph.react.http.JsonTemplatingRestReaction;
 import org.reactiveminds.actiongraph.react.kafka.JsonTemplatingKafkaReaction;
 import org.reactiveminds.actiongraph.react.templates.TemplateFunction;
-import org.reactiveminds.actiongraph.util.JSEngine;
-import org.reactiveminds.actiongraph.util.JsonNode;
-import org.reactiveminds.actiongraph.util.SystemProps;
+import org.reactiveminds.actiongraph.util.*;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,15 +34,20 @@ public class GraphStore {
     private static String GRP_CONFIG_FILE_PATTERN = System.getProperty("template.config.pattern.group", "g-.*");
     private static String ACT_CONFIG_FILE_PATTERN = System.getProperty("template.config.pattern.action", "a-.*");
 
-    private static void saveConfig(Path file, Node.Type engine) throws IOException, ScriptException, ActionGraphException{
+    private static void saveConfig(Path file, Node.Type engine) throws IOException, ScriptException, ActionGraphException {
         String content = String.join("", Files.readAllLines(file));
-        JsonNode jsonNode = JSEngine.evaluateJson(content);
+        JsonNode jsonNode = ScriptUtil.evaluateJson(content);
         switch (engine){
             case ACTION:
                 String url = (String) ((JsonNode.ValueNode) jsonNode.get(ActionData.FIELD_ENDPOINT)).getValue();
                 String actionPath = (String) ((JsonNode.ValueNode) jsonNode.get(ActionData.FIELD_PATH)).getValue();
                 String postTemplate = jsonNode.get(ActionData.FIELD_TEMPLATE).asText();
-                commitAction(url, postTemplate, actionPath);
+                JsonNode node = jsonNode.get(ActionData.SCRIPT);
+                String script = null;
+                if(node != null && node.type() == JsonNode.Type.Value){
+                    script = (String) ((JsonNode.ValueNode) node).getValue();
+                }
+                commitAction(url, postTemplate, actionPath, script);
                 LOGGER.info("Saved action config {}", file);
                 break;
             case GROUP:
@@ -149,7 +153,7 @@ public class GraphStore {
             actionData.getProps().forEach(props -> {
                 try {
                     Action action = buildAction(actionData.getActionPath());
-                    addReaction(TemplateFunction.Engine.valueOf(actionData.getTemplateEngine()), action, props.url, props.jsonTemplate);
+                    addReaction(TemplateFunction.Engine.valueOf(actionData.getScript()), action, props.url, props.jsonTemplate);
                 } catch (Exception e) {
                     LOGGER.error("* Failed to load action {} to endpoint [{}] * Error => {}", actionData.getActionPath(), props.url, e.getMessage());
                     LOGGER.debug("", e);
@@ -189,11 +193,14 @@ public class GraphStore {
         o.setRoot(graphRoot);
         storeProvider.save(graphRoot, o);
     }
-    private static synchronized void commitAction(String url, String postTemplate, String actionPath){
+    private static synchronized void commitAction(String url, String postTemplate, String actionPath, String script){
         ActionData o = storeProvider.loadAction(actionPath);
         if(o == null)
             o = new ActionData();
         o.setActionPath(actionPath);
+        if (script != null) {
+            o.setScript(script);
+        }
         ActionData.Props props = new ActionData.Props();
         props.url = url;
         props.jsonTemplate = postTemplate;
@@ -218,11 +225,7 @@ public class GraphStore {
     }
     private static Group buildGroup(String asJson, String graphRoot){
         JsonNode node;
-        try {
-            node = JSEngine.evaluateJson(asJson);
-        } catch (ScriptException e) {
-            throw new ActionGraphException("PARSE_ERR: unable to parse action graph ", e);
-        }
+        node = ScriptUtil.evaluateJson(asJson);
         if(node.type() != JsonNode.Type.Object){
             throw new ActionGraphException("PARSE_ERR: action graph json should be an object");
         }
@@ -240,9 +243,10 @@ public class GraphStore {
      */
     public static void saveActionData(String url, String postTemplate, String actionPath){
         Action action = buildAction(actionPath);
-        Reaction reaction = addReaction(TemplateFunction.Engine.valueOf(System.getProperty(SystemProps.TEMPLATE_ENGINE, SystemProps.TEMPLATE_ENGINE_DEFAULT)), action, url, postTemplate);
+        TemplateFunction.Engine engine = TemplateFunction.Engine.valueOf(System.getProperty(SystemProps.TEMPLATE_ENGINE, SystemProps.TEMPLATE_ENGINE_DEFAULT));
+        Reaction reaction = addReaction(engine, action, url, postTemplate);
         try {
-            commitAction(url, postTemplate, action.path());
+            commitAction(url, postTemplate, action.path(), engine.name());
         }
         catch (Exception e){
             action.removeObserver(reaction);
@@ -250,11 +254,9 @@ public class GraphStore {
         }
     }
     private static Reaction addReaction(TemplateFunction.Engine engine, Action action, String url, String postTemplate){
-        Reaction reaction = JsonTemplatingKafkaReaction.endpointMatches(url) ? new JsonTemplatingKafkaReaction(url, action.path(), postTemplate, engine)
+        Reaction reaction = Utils.isEmpty(url) ? new LoggingTemplateBasedReaction(url, action.path(), postTemplate, engine) :
+                JsonTemplatingKafkaReaction.endpointMatches(url) ? new JsonTemplatingKafkaReaction(url, action.path(), postTemplate, engine)
                 :  new JsonTemplatingRestReaction(url, action.path(), postTemplate, engine);
-        boolean log = Boolean.parseBoolean(System.getProperty(SystemProps.EVENT_LOG, SystemProps.EVENT_LOG_DEFAULT));
-        if(log)
-            action.addObserver(new LoggingTemplateBasedReaction(url, action.path(), postTemplate, engine));
         action.addObserver(reaction);
         return reaction;
     }

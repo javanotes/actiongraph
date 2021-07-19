@@ -1,15 +1,21 @@
 package org.reactiveminds.actiongraph.react.templates;
 
-import java.util.List;
+import org.reactiveminds.actiongraph.util.ScriptUtil;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 class JsonPathTemplating extends AbstractTemplateFunction{
     JsonPathTemplating(String template) {
         super(template);
-        throw new UnsupportedOperationException("TBD");
     }
 
     @Override
     protected String evaluate(String payload, String exprStr) {
-        return null;
+        try {
+            return String.valueOf(ScriptUtil.jsonPath(payload, exprStr));
+        } catch (Exception e) {
+            throw new UncheckedIOException(new IOException("Unable to evaluate json path: "+exprStr, e));
+        }
     }
 }

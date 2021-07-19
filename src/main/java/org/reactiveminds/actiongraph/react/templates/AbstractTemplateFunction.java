@@ -1,6 +1,6 @@
 package org.reactiveminds.actiongraph.react.templates;
 
-import org.reactiveminds.actiongraph.core.ActionGraphException;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 
 import java.util.ArrayList;
 import java.util.List;

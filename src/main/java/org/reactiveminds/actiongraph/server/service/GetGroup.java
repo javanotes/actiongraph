@@ -1,9 +1,8 @@
 package org.reactiveminds.actiongraph.server.service;
 
 import org.reactiveminds.actiongraph.core.ActionGraphService;
-import org.reactiveminds.actiongraph.core.ActionGraphException;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 import org.reactiveminds.actiongraph.server.GetHttpService;
-import org.reactiveminds.actiongraph.server.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

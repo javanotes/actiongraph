@@ -10,12 +10,7 @@ public interface JsonNode {
     JsonNode get(String key);
     JsonNode get(int index);
     default String format(){
-        try {
-            return JSEngine.prettyJson(asText());
-        } catch (ScriptException e) {
-            e.printStackTrace();
-            return asText();
-        }
+        return ScriptUtil.prettyJson(asText());
     }
     static JsonNode parse(Object doc){
         return parseValue(doc);

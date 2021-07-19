@@ -10,11 +10,9 @@ public interface TemplateFunction extends Function<String, String> {
         switch (engineEngine){
             case JavaScript:
                 return new JavascriptTemplating(templateDoc);
-            case Velocity:
-                return new VelocityTemplating(templateDoc);
             case JsonPath:
                 return new JsonPathTemplating(templateDoc);
         }
-        throw new UnsupportedOperationException("Unknown engine: "+engineEngine);
+        throw new UnsupportedOperationException(engineEngine.toString());
     }
 }

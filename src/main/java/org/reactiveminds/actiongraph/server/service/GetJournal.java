@@ -1,9 +1,10 @@
 package org.reactiveminds.actiongraph.server.service;
 
-import org.reactiveminds.actiongraph.core.ActionGraphException;
-import org.reactiveminds.actiongraph.core.ActionGraphService;
+import org.reactiveminds.actiongraph.store.ActionEntries;
+import org.reactiveminds.actiongraph.util.ScriptUtil;
+import org.reactiveminds.actiongraph.util.Utils;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 import org.reactiveminds.actiongraph.server.GetHttpService;
-import org.reactiveminds.actiongraph.server.HttpService;
 import org.reactiveminds.actiongraph.store.ActionEntry;
 import org.reactiveminds.actiongraph.store.GraphStore;
 import org.reactiveminds.actiongraph.util.Assert;
@@ -23,16 +24,21 @@ public class GetJournal extends GetHttpService {
         try {
             String corrId = request.getPathParams().get("corrId");
             Assert.notNull(corrId);
-            ActionEntry entry = GraphStore.getEventJournal().getEntry(corrId);
-            if(entry != null){
+            ActionEntries entries = GraphStore.getEventJournal().getEntry(corrId);
+            if(entries != null){
                 response.setContentType("application/json");
                 response.setStatusCode(HttpURLConnection.HTTP_OK);
-                JsonNode.ObjectNode objectNode = new JsonNode.ObjectNode();
-                objectNode.put("correlationId", new JsonNode.ValueNode<>(entry.getCorrelationId()));
-                objectNode.put("status", new JsonNode.ValueNode<>(entry.getStatus()));
-                objectNode.put("firedAt", new JsonNode.ValueNode<>(new SimpleDateFormat("yyyy-MMM-dd hh:mm:ss").format(new Date(entry.getCreated()))));
-                objectNode.put("additionalInfo", new JsonNode.ValueNode<>(entry.getAddlInfo()));
-                response.setContent(objectNode.asText());
+                JsonNode.ArrayNode array = new JsonNode.ArrayNode();
+                entries.getEntries().forEach(entry -> {
+                    JsonNode.ObjectNode objectNode = new JsonNode.ObjectNode();
+                    objectNode.put("actionPath", new JsonNode.ValueNode<>(entry.getActionPath()));
+                    objectNode.put("correlationId", new JsonNode.ValueNode<>(entry.getCorrelationId()));
+                    objectNode.put("status", new JsonNode.ValueNode<>(entry.getStatus()));
+                    objectNode.put("firedAt", new JsonNode.ValueNode<>(new SimpleDateFormat("yyyy-MMM-dd hh:mm:ss").format(new Date(entry.getCreated()))));
+                    objectNode.put("additionalInfo", new JsonNode.ValueNode<>(entry.getAddlInfo()));
+                    array.add(objectNode);
+                });
+                response.setContent(array.asText());
             }
             else{
                 response.setStatusCode(HttpURLConnection.HTTP_NOT_FOUND);

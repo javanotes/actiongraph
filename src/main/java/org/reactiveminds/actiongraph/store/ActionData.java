@@ -12,6 +12,7 @@ public class ActionData implements Serializable {
     public static final String FIELD_PATH = "actionPath";
     public static final String FIELD_ENDPOINT = "actionEndpoint";
     public static final String FIELD_TEMPLATE = "actionTemplate";
+    public static final String SCRIPT = "script";
     public Set<Props> getProps() {
         return props;
     }
@@ -39,15 +40,15 @@ public class ActionData implements Serializable {
     }
     private String actionPath;
 
-    public String getTemplateEngine() {
-        return templateEngine;
+    public String getScript() {
+        return script;
     }
 
-    public void setTemplateEngine(String templateEngine) {
-        this.templateEngine = templateEngine;
+    public void setScript(String script) {
+        this.script = script;
     }
 
-    private String templateEngine = TemplateFunction.Engine.JavaScript.name();
+    private String script = TemplateFunction.Engine.JavaScript.name();
     public void setProps(Set<Props> props) {
         this.props = props;
     }

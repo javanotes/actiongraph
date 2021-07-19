@@ -5,6 +5,15 @@ import java.io.Serializable;
 public class ActionEntry implements Serializable {
     String correlationId;
 
+    public String getActionPath() {
+        return actionPath;
+    }
+
+    public void setActionPath(String actionPath) {
+        this.actionPath = actionPath;
+    }
+
+    String actionPath;
     public String getCorrelationId() {
         return correlationId;
     }

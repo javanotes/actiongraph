@@ -1,6 +1,6 @@
 package org.reactiveminds.actiongraph.react.templates;
 
-import org.reactiveminds.actiongraph.util.JSEngine;
+import org.reactiveminds.actiongraph.util.ScriptUtil;
 
 class JavascriptTemplating extends AbstractTemplateFunction {
 
@@ -10,6 +10,6 @@ class JavascriptTemplating extends AbstractTemplateFunction {
 
     @Override
     protected String evaluate(String payload, String exprStr) {
-        return String.valueOf(JSEngine.evaluate(payload, exprStr));
+        return String.valueOf(ScriptUtil.evaluate(payload, exprStr));
     }
 }

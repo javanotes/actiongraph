@@ -2,11 +2,11 @@ package org.reactiveminds.actiongraph.core;
 
 import org.reactiveminds.actiongraph.react.ActionMatcher;
 import org.reactiveminds.actiongraph.react.Reaction;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.function.Predicate;
 
 public class Action extends AbstractNode{
 
@@ -48,12 +48,13 @@ public class Action extends AbstractNode{
         return Type.ACTION;
     }
     @Override
-    public final void react(String correlationId, ActionMatcher filter, String signal) {
+    public final boolean react(String correlationId, ActionMatcher filter, String signal) {
         // this is invoked in actor - thread safe
-        if(filter.test(this)){
-            for (Reaction reaction : subscribers) {
-                reaction.accept(path(), signal);
-            }
+        boolean fired = false;
+        for (Reaction reaction : subscribers) {
+            reaction.accept(path(), signal);
+            fired = true;
         }
+        return fired;
     }
 }

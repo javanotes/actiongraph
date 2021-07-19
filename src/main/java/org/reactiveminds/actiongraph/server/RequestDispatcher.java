@@ -8,6 +8,7 @@ import akka.routing.SmallestMailboxRoutingLogic;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.reactiveminds.actiongraph.core.actor.Actors;
+import org.reactiveminds.actiongraph.util.SystemProps;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -18,7 +19,8 @@ class RequestDispatcher implements HttpHandler, Closeable {
     private final ActorRef routerActor;
     RequestDispatcher(){
         routerActor = Actors.instance()
-                .routerActor(RequestHandler.class, Integer.parseInt(System.getProperty("server.maxHandlers", "10")), "http-handler");
+                .routerActor(RequestHandler.class,
+                        Integer.parseInt(System.getProperty(SystemProps.SERVER_HANDLER, SystemProps.SERVER_HANDLER_DEFAULT)), "http-handler");
     }
     @Override
     public void handle(HttpExchange exchange) throws IOException {
@@ -30,10 +32,14 @@ class RequestDispatcher implements HttpHandler, Closeable {
         routerActor.tell(PoisonPill.getInstance(), ActorRef.noSender());
     }
 
+    /**
+     * @Deprecated
+     */
     public static class RequestRouter extends AbstractActor{
         private Router router;
-        private final List<Routee> routees = new ArrayList<>();
+
         public RequestRouter(int maxWorker) {
+            List<Routee> routees = new ArrayList<>(maxWorker);
             for (int i = 0; i < maxWorker; i++) {
                 ActorRef r = getContext().actorOf(Props.create(RequestHandler.class));
                 getContext().watch(r);

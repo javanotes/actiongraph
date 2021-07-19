@@ -5,10 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
-import org.reactiveminds.actiongraph.core.ActionGraph;
-import org.reactiveminds.actiongraph.core.ActionGraphException;
-import org.reactiveminds.actiongraph.core.Action;
-import org.reactiveminds.actiongraph.core.Group;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 
 @RunWith(BlockJUnit4ClassRunner.class)
 public class TestSuite {
