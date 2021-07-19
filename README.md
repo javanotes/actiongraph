@@ -138,15 +138,33 @@ GET /actiongraph/groups/{root}
 Kafka support is being introduced. The action template configuration changes are to be made in the *actionEndpoint* element
 ```json
 {
-  "actionPath":"/orders/serviceLogger/async",
+  "actionPath":"/orders/serviceLogger/sync",
   "actionEndpoint": "kafka://<destinationTopic>:<keyProperty>",
+  "script": "JsonPath",
   "actionTemplate": {
-    "eventType": "serviceLogger",
-    "requestId": "#{$.split(2)[0]}",
-    "message": "event log generated at #{$.split(2)[1]}"
+    "eventType": "syncLogger",
+    "requestId": "#{$.requestId}",
+    "message": "event log generated at #{$.eventTime}"
   }
 }
 ```
-
+Firing the below payload to ActionGraph mediation server
+```json
+{
+	"actionPath": "/orders/serviceLogger/.*",
+	"payload": {
+		"requestId": "r123", 
+		"eventTime": "11:55:22"
+	}
+}
+```
+Would publish the corresponding event message to Kafka
+```json
+{
+  "requestId": "r123",
+  "eventType": "syncLogger",
+  "message": "event log generated at 11:55:22"
+}
+```
 #### Template Engines
-By default uses __JavaScript__ as the template expression language. _JsonPath_ and _Velocity_ will be introduced (TBD).
+By default uses __JavaScript__ as the template expression language. So templating can follow any valid javascript syntax, as well as a _JsonPath_ syntax.
