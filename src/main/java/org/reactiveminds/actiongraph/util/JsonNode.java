@@ -16,7 +16,7 @@ public interface JsonNode {
         return parseValue(doc);
     }
 
-    private static JsonNode parseValue(Object o){
+    static JsonNode parseValue(Object o){
         if(o == null)
             return new MissingNode();
         if(o instanceof List){

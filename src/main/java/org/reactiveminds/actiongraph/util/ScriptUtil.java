@@ -63,7 +63,7 @@ public class ScriptUtil {
             Object o = function.invokeFunction("jsonPath", SCRIPT_ENGINE.eval(String.format(TO_JSON, doc)), expression);
             if(o instanceof ScriptObjectMirror){
                 ScriptObjectMirror map = (ScriptObjectMirror) o;
-                return map.get("0"); //first item in js array. this will be valid id the json path matches exactly one element
+                return map.get("0"); //first item in js array. this will be valid iff the json path matches exactly one element
             }
             return o;
         } catch (ScriptException | NoSuchMethodException e) {
