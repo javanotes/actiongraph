@@ -44,7 +44,13 @@ public interface JsonNode {
             return entries;
         }
 
-        private final Map<String, JsonNode> entries = new HashMap<>();
+        public JsonNode firstChild(){
+            return entries.entrySet().iterator().next().getValue();
+        }
+        public boolean contains(String key){
+            return entries.containsKey(key);
+        }
+        private final LinkedHashMap<String, JsonNode> entries = new LinkedHashMap<>();
         public void put(String key, JsonNode node){
             entries.put(key, node);
         }

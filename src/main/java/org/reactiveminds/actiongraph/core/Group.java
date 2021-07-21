@@ -118,6 +118,9 @@ public class Group extends AbstractNode{
         dir = getChild(child);
         if(dir == null)
             throw new ActionGraphException("Child directory not found: "+child);
+        if(dir.type() != Type.GROUP)
+            throw new ActionGraphException(String.format("CONFLICTING_NODE_TYPE: Expecting '%s' to be a GROUP, got ACTION instead. " +
+                    "Is there another configuration loaded with dissimilar node type?", child));
         return (Group) dir;
     }
 

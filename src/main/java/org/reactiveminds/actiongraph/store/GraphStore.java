@@ -42,7 +42,7 @@ public class GraphStore {
                 String url = (String) ((JsonNode.ValueNode) jsonNode.get(ActionData.FIELD_ENDPOINT)).getValue();
                 String actionPath = (String) ((JsonNode.ValueNode) jsonNode.get(ActionData.FIELD_PATH)).getValue();
                 String postTemplate = jsonNode.get(ActionData.FIELD_TEMPLATE).asText();
-                JsonNode node = jsonNode.get(ActionData.SCRIPT);
+                JsonNode node = jsonNode.get(ActionData.FIELD_SCRIPT);
                 String script = null;
                 if(node != null && node.type() == JsonNode.Type.Value){
                     script = (String) ((JsonNode.ValueNode) node).getValue();
@@ -134,11 +134,15 @@ public class GraphStore {
         }
     }
 
+    /**
+     * @deprecated
+     */
     private static void readConfigs() {
         String configPath = System.getProperty(SystemProps.TEMPLATE_CONFIG_DIR);
         if(configPath != null){
             File f = new File(configPath);
             if(f.exists() && f.isDirectory()){
+                LOGGER.warn("The recommended way to upload config is via the REST api");
                 LOGGER.info("Walking config directory {}, for config file/s of pattern '{}' or '{}'", f, GRP_CONFIG_FILE_PATTERN, ACT_CONFIG_FILE_PATTERN);
                 readConfigs(f);
                 LOGGER.info("Walk complete");
@@ -273,7 +277,7 @@ public class GraphStore {
     }
     private static void createNodes(JsonNode.ObjectNode root, Group group){
         for (Map.Entry<String, JsonNode> entry: root.getEntries().entrySet()){
-            if(entry.getValue().type() == JsonNode.Type.Array || entry.getValue().type() == JsonNode.Type.Missing){
+            if(entry.getValue().type() == JsonNode.Type.Array ){
                 throw new ActionGraphException("PARSE_ERR: action graph json cannot contain arrays");
             }
             if(entry.getValue().type() == JsonNode.Type.Object){

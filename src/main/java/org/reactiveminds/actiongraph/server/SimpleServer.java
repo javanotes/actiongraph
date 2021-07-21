@@ -61,6 +61,7 @@ class SimpleServer extends Thread implements AutoCloseable{
         ServiceRegistry.register(new PostAction());
         ServiceRegistry.register(new GetJournal());
         ServiceRegistry.register(new PostReplay());
+        ServiceRegistry.register(new PostConfig());
     }
 
     @Override

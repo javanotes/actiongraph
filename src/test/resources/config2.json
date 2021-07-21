@@ -1,0 +1,11 @@
+{
+  "simple": [{
+    "actionPath":"myEndPoint",
+    "actionEndpoint":"",
+    "actionTemplate":{
+      "eventType":"asyncLogger",
+      "requestId":"#{$.requestId}",
+      "message":"txnLogger event log generated at #{$.eventTime}"
+    }
+  }]
+}

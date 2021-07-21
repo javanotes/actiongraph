@@ -1,0 +1,35 @@
+{
+  "orders":{
+    "txnLogger":[{
+      "actionPath":"async",
+      "actionEndpoint":"",
+      "actionTemplate":{
+        "eventType":"asyncLogger",
+        "requestId":"#{$.requestId}",
+        "message":"txnLogger event log generated at #{$.eventTime}"
+      }
+    }],
+    "serviceLogger":[
+      {
+        "actionPath":"sync",
+        "actionEndpoint":"",
+        "script":"JsonPath",
+        "actionTemplate":{
+          "eventType":"syncLogger",
+          "requestId":"#{$.requestId}",
+          "message":"serviceLogger sync event log generated at #{$.eventTime}"
+        }
+      },
+      {
+        "actionPath":"async",
+        "actionEndpoint":"",
+        "script":"JsonPath",
+        "actionTemplate":{
+          "eventType":"asyncLogger",
+          "requestId":"#{$.requestId}",
+          "message":"serviceLogger async event log generated at #{$.eventTime}"
+        }
+      }
+    ]
+  }
+}

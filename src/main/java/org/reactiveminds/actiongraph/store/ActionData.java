@@ -12,7 +12,7 @@ public class ActionData implements Serializable {
     public static final String FIELD_PATH = "actionPath";
     public static final String FIELD_ENDPOINT = "actionEndpoint";
     public static final String FIELD_TEMPLATE = "actionTemplate";
-    public static final String SCRIPT = "script";
+    public static final String FIELD_SCRIPT = "script";
     public Set<Props> getProps() {
         return props;
     }
@@ -55,6 +55,14 @@ public class ActionData implements Serializable {
 
     private Set<Props> props = new HashSet<>();
     public static class Props{
+        public Props(String url, String jsonTemplate) {
+            this.url = url;
+            this.jsonTemplate = jsonTemplate;
+        }
+
+        public Props() {
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
