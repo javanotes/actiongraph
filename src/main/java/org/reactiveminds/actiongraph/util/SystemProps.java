@@ -15,6 +15,7 @@ public interface SystemProps {
     String SERVER_PORT_DEFAULT = "4567";
     String SERVER_HANDLER = "server.handlers.max";
     String SERVER_HANDLER_DEFAULT = "10";
+    String SERVER_SHUTDOWN = "server.shutdown.hook";
     String MAX_RETRY = "action.retry.count";
     String MAX_RETRY_DEFAULT = "3";
     String RETRY_BACKOFF = "action.retry.delay.backoff";

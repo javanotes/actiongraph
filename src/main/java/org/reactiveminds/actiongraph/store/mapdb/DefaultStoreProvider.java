@@ -9,6 +9,7 @@ import org.reactiveminds.actiongraph.store.*;
 import org.reactiveminds.actiongraph.store.QueueStore;
 import org.reactiveminds.actiongraph.store.StoreProvider;
 import org.reactiveminds.actiongraph.util.SystemProps;
+import org.reactiveminds.actiongraph.util.err.ActionGraphException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +22,7 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
-public class DefaultStoreProvider implements StoreProvider,EventJournal {
+public class DefaultStoreProvider extends AbstractEventJournal implements StoreProvider,EventJournal {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultStoreProvider.class);
     static final String GROUPS = "GROUPS";
     static final String ACTIONS = "ACTIONS";
@@ -32,7 +33,7 @@ public class DefaultStoreProvider implements StoreProvider,EventJournal {
     private File createDB(){
         String dbPath = System.getProperty(SystemProps.DB_FILE_PATH);
         if(dbPath == null)
-            Bootstrap.exit();
+            throw new ActionGraphException("Mandatory property missing '"+SystemProps.DB_FILE_PATH+"'. Cannot create db ");
         File file = new File(dbPath);
         mapDB = DBMaker.newFileDB(file)
                 //.mmapFileEnableIfSupported()
@@ -206,35 +207,17 @@ public class DefaultStoreProvider implements StoreProvider,EventJournal {
         }
     }
     private DelayQueue<QueuedEntry> delayQueue =  new DelayQueue<>();
+
     @Override
-    public synchronized String createEntry(String root, String pathExpr, String payload) {
-        ActionEntries entry = new ActionEntries();
-        entry.setRoot(root);
-        entry.setPayload(payload);
-        entry.setPathMatcher(pathExpr == null || pathExpr.trim().isEmpty() ? "all" : pathExpr);
-        entry.setStatus(EventJournal.STATUS_CREATED);
-        entry.setCorrelationId(UUID.randomUUID().toString());
-        entry.setCreated(System.currentTimeMillis());
-        entry.setUpdated(entry.getCreated());
+    protected void recordEvent(ActionEntries entry) {
         eventJournal.put(entry.getCorrelationId(), entry);
         mapDB.commit();
         queueEntry(entry);
-        return entry.getCorrelationId();
     }
 
     @Override
-    public ActionEntries getEntry(String corrId) {
-        return eventJournal.get(corrId);
-    }
-
-    @Override
-    public boolean markSuccess(String correlationId, String actionPath) {
-        return updateEntry(correlationId, actionPath, EventJournal.STATUS_SUCCESS, null);
-    }
-
-    @Override
-    public boolean markFailed(String correlationId, String actionPath, String cause) {
-        return updateEntry(correlationId, actionPath, EventJournal.STATUS_FAIL, cause);
+    protected ActionEntries fetchEvent(String correlationId) {
+        return null;
     }
 
     private void queueEntry(ActionEntry entry){
@@ -244,35 +227,6 @@ public class DefaultStoreProvider implements StoreProvider,EventJournal {
     }
 
     private final Object[] MUTEX_BUCKETS = new Object[Integer.parseInt(System.getProperty(SystemProps.MUTEX_BUCKETS, SystemProps.MUTEX_BUCKETS_DEFAULT)) ];
-    private synchronized boolean updateEntry(String correlationId, String actionPath, String status, String addlInfo) {
-        ActionEntries entry = eventJournal.get(correlationId);
-        if(entry != null){
-            Optional<ActionEntry> actionEntry = entry.getByPath(actionPath);
-            ActionEntry item;
-            if(actionEntry.isPresent()){
-                item = actionEntry.get();
-            }
-            else{
-                item = new ActionEntry();
-            }
-            item.setStatus(status);
-            item.setUpdated(System.currentTimeMillis());
-            item.setRoot(entry.getRoot());
-            item.setPayload(entry.getPayload());
-            item.setPathMatcher(entry.getPathMatcher());
-            item.setCorrelationId(entry.getCorrelationId());
-            item.setCreated(entry.getCreated());
-            item.setActionPath(actionPath);
-            if(addlInfo != null)
-                item.setAddlInfo(addlInfo);
-            entry.addEntry(item);
 
-            eventJournal.put(entry.getCorrelationId(), entry);
-            mapDB.commit();
-            queueEntry(entry);
-            return true;
-        }
-        return false;
-    }
 
 }

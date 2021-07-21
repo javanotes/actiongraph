@@ -9,6 +9,8 @@
     <version>0.1-SNAPSHOT</version>
     <properties>
         <kafka.client.version>2.3.0</kafka.client.version>
+        <akka.version>2.6.15</akka.version>
+        <logback.version>1.2.3</logback.version>
     </properties>
     <build>
         <plugins>
@@ -63,7 +65,7 @@
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-actor_2.12</artifactId>
-            <version>2.6.15</version>
+            <version>${akka.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.tape2</groupId>
@@ -73,7 +75,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
+            <version>${logback.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients -->
         <dependency>

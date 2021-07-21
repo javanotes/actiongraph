@@ -42,12 +42,14 @@ class SimpleServer extends Thread implements AutoCloseable{
             addHandlers();
             httpServer.start();
             running = true;
-            Runtime.getRuntime().addShutdownHook(new Thread("shutdown"){
-                @Override
-                public void run(){
-                    SimpleServer.this.close();
-                }
-            });
+            if(Boolean.parseBoolean(System.getProperty(SystemProps.SERVER_SHUTDOWN, "true"))){
+                Runtime.getRuntime().addShutdownHook(new Thread("shutdown"){
+                    @Override
+                    public void run(){
+                        SimpleServer.this.close();
+                    }
+                });
+            }
             timer.stop();
             LOGGER.info("Server listening on port {} (elapsed {} ms)",port, timer.lastLap(TimeUnit.MILLISECONDS));
         } catch (IOException e) {

@@ -70,6 +70,11 @@ public final class ActionGraph {
                 if(THIS == null){
                     THIS = new ActionGraph();
                     GraphStore.open();
+                    if(!THIS.mounts.isEmpty()){
+                        THIS.mounts.forEach((s, root) -> {
+                            LOG.info("Loaded topology \n{}", THIS.describeRoot(s));
+                        });
+                    }
                 }
             }
         }

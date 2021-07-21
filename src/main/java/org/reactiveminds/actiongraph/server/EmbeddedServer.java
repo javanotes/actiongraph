@@ -52,6 +52,10 @@ public class EmbeddedServer {
         System.setProperty(SystemProps.TEMPLATE_CONFIG_ACTION_PATTERN, pattern);
         return this;
     }
+    public EmbeddedServer disableShutdownHook(){
+        System.setProperty(SystemProps.SERVER_SHUTDOWN, "false");
+        return this;
+    }
 
     /**
      * Start the server on a dedicated thread

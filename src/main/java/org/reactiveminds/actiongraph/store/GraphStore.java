@@ -107,17 +107,20 @@ public class GraphStore {
                 e.printStackTrace();
             }
             isOpen = false;
-            LOGGER.info("file store closed");
+            LOGGER.info("Store provider closed");
         }
     }
     private static void openProvider(){
         try {
             storeProvider = (StoreProvider) Class.forName(System.getProperty(SystemProps.STORE_PROVIDER, SystemProps.DEFAULT_STORE_PROVIDER)).getConstructor().newInstance();
-        }  catch (Exception e) {
-            throw new ActionGraphException("Unable to load a store provider class!", e);
+            LOGGER.info("Loading saved configurations ..");
+            storeProvider.open();
+        }  catch (Throwable e) {
+            LOGGER.warn("* Unable to use the store provider! Using in-memory store provider instead * {} ", e.getMessage());
+            storeProvider = new InMemoryStoreProvider();
+            LOGGER.info("Loading saved configurations ..");
+            storeProvider.open();
         }
-        LOGGER.info("Loading saved configurations ..");
-        storeProvider.open();
         LOGGER.info("Linking configurations ..");
         readConfigs();
         loadGroups();

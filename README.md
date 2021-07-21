@@ -125,6 +125,24 @@ Other APIs:
 `
 GET /actiongraph/journal/{corrId}
 `
+```json
+[
+    {
+        "actionPath": "/orders/serviceLogger/async",
+        "additionalInfo": "",
+        "correlationId": "8d9281dc-b3bd-4dd8-b8f1-5679d8297900",
+        "status": "success",
+        "firedAt": "2021-Jul-20 12:36:27"
+    },
+    {
+        "actionPath": "/orders/serviceLogger/sync",
+        "additionalInfo": "",
+        "correlationId": "8d9281dc-b3bd-4dd8-b8f1-5679d8297900",
+        "status": "success",
+        "firedAt": "2021-Jul-20 12:36:27"
+    }
+]
+```
 
 `
 POST /actiongraph/replay/{corrId}
@@ -168,3 +186,4 @@ Would publish the corresponding event message to Kafka
 ```
 #### Template Engines
 By default uses __JavaScript__ as the template expression language. So templating can follow any valid javascript syntax, as well as a _JsonPath_ syntax.
+
